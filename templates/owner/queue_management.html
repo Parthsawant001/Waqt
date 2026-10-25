@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static waqt_tags %}
+
+{% block title %}Live Queue Management — {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="waqt-container-wide" style="padding: 36px 24px;">
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-subtle); padding-bottom: 16px; margin-bottom: 28px;">
+    <div>
+      <span class="pilot-tag" style="background: var(--turmeric); color: #fff; border: none;">Algorithm 2 &bull; FIFO
+        with Table Eligibility</span>
+      <h1 style="font-size: 32px; margin: 4px 0 0 0;">Live Queue Operations</h1>
+    </div>
+    <a href="{% url 'owner_dashboard' %}" class="btn btn-outline btn-sm">&larr; Back to Console</a>
+  </div>
+
+  <!-- Vacant Table Dispatch Bar -->
+  <div
+    style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 24px; margin-bottom: 32px; box-shadow: var(--shadow-subtle);">
+    <h3 style="font-size: 18px; margin: 0 0 12px 0;">Available Tables Ready to Seat Diners</h3>
+
+    {% if available_tables %}
+    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+      {% for t in available_tables %}
+      <div
+        style="background: var(--cream); border: 1px solid var(--sand); border-radius: var(--radius-sm); padding: 16px; min-width: 220px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <strong style="font-size: 16px; font-family: var(--font-serif);">Table {{ t.table_number }}</strong>
+          <span class="badge-status badge-available">Cap: {{ t.capacity }}</span>
+        </div>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="call_eligible">
+          <input type="hidden" name="table_id" value="{{ t.id }}">
+          <button type="submit" class="btn btn-accent btn-sm" style="width: 100%;">
+            Call Next Eligible Party &rarr;
+          </button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="font-size: 14px; color: var(--wet-sand); margin: 0;">No available tables right now. Mark tables Available
+      or Cleaning to seat waiting parties.</p>
+    {% endif %}
+  </div>
+
+  <!-- Queue Columns: Waiting vs Called vs Seated -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+    <!-- Column 1: Waiting (FIFO) -->
+    <div
+      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-subtle);">
+      <h3 style="font-size: 18px; margin-bottom: 16px; color: var(--deep-tide);">1. Waiting in Queue ({{ waiting_queue.count }})</h3>
+
+      {% if waiting_queue %}
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        {% for q in waiting_queue %}
+        <div
+          style="background: var(--shell); border: var(--border-subtle); border-radius: var(--radius-sm); padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-family: var(--font-serif); font-size: 20px; font-weight: 700; color: var(--turmeric);">#{{ q.position }}</span>
+            <span style="font-size: 12px; color: var(--driftwood);">Joined {{ q.joined_at|time:"g:i A" }}</span>
+          </div>
+          <div style="font-weight: 600; font-size: 15px; margin: 6px 0 2px 0;">
+            {{ q.customer.first_name|default:q.customer.username }}
+          </div>
+          <div style="font-size: 13px; color: var(--wet-sand);">
+            Party Size: <strong>{{ q.party_size }} Persons</strong> &bull; Est. Wait: {{ q.estimated_wait_minutes }}m
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="font-size: 13px; color: var(--wet-sand);">No parties currently waiting.</p>
+      {% endif %}
+    </div>
+
+    <!-- Column 2: Called (Customer Notified) -->
+    <div
+      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-subtle);">
+      <h3 style="font-size: 18px; margin-bottom: 16px; color: #2E7D32;">2. Table Ready / Called ({{ called_queue.count }})</h3>
+
+      {% if called_queue %}
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        {% for q in called_queue %}
+        <div style="background: #E8F5E9; border: 1px solid #C8E6C9; border-radius: var(--radius-sm); padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; color: #1B5E20;">Ticket #{{ q.position }}</span>
+            <span style="font-size: 11px; color: #2E7D32;">Called at {{ q.called_at|time:"g:i A" }}</span>
+          </div>
+          <div style="font-weight: 600; font-size: 15px; margin: 6px 0 2px 0;">
+            {{ q.customer.first_name|default:q.customer.username }} ({{ q.party_size }}p)
+          </div>
+
+          <!-- Seat Form -->
+          <form method="post" style="margin-top: 12px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="seat">
+            <input type="hidden" name="entry_id" value="{{ q.id }}">
+            <div style="display: flex; gap: 8px;">
+              <select name="table_id" class="form-select" style="font-size: 12px; padding: 6px;" required>
+                <option value="">Assign Table...</option>
+                {% for t in available_tables %}
+                {% if t.capacity >= q.party_size %}
+                <option value="{{ t.id }}">Table {{ t.table_number }} (Cap: {{ t.capacity }})</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap;">Seat Party</button>
+            </div>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="font-size: 13px; color: var(--wet-sand);">No parties currently called.</p>
+      {% endif %}
+    </div>
+
+    <!-- Column 3: Seated / Dining in Progress -->
+    <div
+      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-subtle);">
+      <h3 style="font-size: 18px; margin-bottom: 16px; color: var(--driftwood);">3. Currently Seated & Dining</h3>
+
+      {% if seated_queue %}
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        {% for q in seated_queue %}
+        <div
+          style="background: var(--shell); border: var(--border-subtle); border-radius: var(--radius-sm); padding: 16px;">
+          <div style="font-weight: 600; font-size: 14px;">{{ q.customer.first_name|default:q.customer.username }}</div>
+          <div style="font-size: 12px; color: var(--driftwood); margin: 2px 0 10px 0;">
+            Party of {{ q.party_size }} &bull; Seated at {{ q.seated_at|time:"g:i A" }}
+          </div>
+
+          <!-- Complete Dining Form (Logs turnover) -->
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="complete">
+            <input type="hidden" name="entry_id" value="{{ q.id }}">
+            <div style="display: flex; gap: 8px;">
+              <select name="table_id" class="form-select" style="font-size: 12px; padding: 6px;" required>
+                <option value="">Freed Table...</option>
+                {% for t in restaurant.tables.all %}
+                <option value="{{ t.id }}">Table {{ t.table_number }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-chilli btn-sm" style="white-space: nowrap;">Complete Dining</button>
+            </div>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="font-size: 13px; color: var(--wet-sand);">No active seated queue records.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

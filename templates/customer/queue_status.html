@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static waqt_tags %}
+
+{% block title %}Live Queue #{{ ticket.position }} — {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="waqt-container" style="padding: 40px 24px;">
+  <!-- Browser Notification Request Banner -->
+  <div id="notification-permission-prompt"
+    style="display: none; background: var(--cream); border: 1px solid var(--sand); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 24px; text-align: center;">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 12px;">
+      <img src="{% static 'icons/bell.svg' %}" width="20" height="20" alt="Bell">
+      <span style="font-size: 14px; font-weight: 500;">Enable browser alerts so we can buzz you the second your coastal
+        table is ready.</span>
+      <button id="enable-notifications-btn" class="btn btn-primary btn-sm">Allow Notifications</button>
+    </div>
+  </div>
+
+  <!-- Called Banner (Revealed when CALLED) -->
+  <div id="called-banner"
+    style="{% if ticket.status != 'CALLED' %}display: none;{% endif %} background: #E8F5E9; border: 2px solid #2E7D32; border-radius: var(--radius-md); padding: 24px; margin-bottom: 24px; text-align: center; animation: pulseCall 2s infinite;">
+    <h2 style="color: #1B5E20; margin: 0 0 8px 0; font-size: 26px;">Your Table is Ready!</h2>
+    <p style="color: #2E7D32; font-size: 15px; margin: 0;">Please proceed to the restaurant host stand immediately to be
+      seated.</p>
+  </div>
+
+  <!-- Queue Digital Ticket Card -->
+  <div class="ticket-container">
+    <span class="pilot-tag"
+      style="background: var(--cream); color: var(--deep-tide); margin-bottom: 8px; display: inline-block;">
+      Palghar Coast Live Queue Pass
+    </span>
+
+    <h2 style="font-size: 24px; color: var(--deep-tide); margin: 6px 0 2px 0;">{{ restaurant.name }}</h2>
+    <div style="font-size: 13px; color: var(--wet-sand); margin-bottom: 16px;">
+      Party of {{ ticket.party_size }} &bull; Joined {{ ticket.joined_at|time:"g:i A" }}
+    </div>
+
+    <div style="margin-bottom: 8px;">
+      <span id="queue-status-badge" class="badge-status {{ ticket.status|status_badge }}"
+        style="font-size: 14px; padding: 6px 16px;">
+        {{ ticket.get_status_display }}
+      </span>
+    </div>
+
+    <div
+      style="font-size: 12px; text-transform: uppercase; color: var(--driftwood); letter-spacing: 0.05em; margin-top: 16px;">
+      Your Queue Number
+    </div>
+    <div id="queue-position" class="ticket-number">
+      #{{ ticket.position }}
+    </div>
+
+    <!-- Real-Time Metrics -->
+    <div
+      style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: var(--shell); border: var(--border-subtle); border-radius: var(--radius-sm); padding: 20px; margin: 24px 0;">
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood);">Parties Ahead</div>
+        <div id="parties-ahead" style="font-size: 28px; font-weight: 700; color: var(--deep-tide); margin-top: 2px;">
+          {{ parties_ahead }}
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood);">Turnover Wait Est.</div>
+        <div id="queue-wait" class="ticket-wait-metric" style="margin-top: 2px;">
+          {{ ticket.estimated_wait_minutes }} min
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 14px; justify-content: center;">
+      <a href="{% url 'customer_dashboard' %}" class="btn btn-outline">My Dashboard</a>
+      {% if ticket.status in 'WAITING,CALLED' %}
+      <a href="{% url 'queue_system:cancel' ticket.pk %}" class="btn btn-chilli"
+        onclick="return confirm('Cancel this queue pass?');">
+        Leave Queue
+      </a>
+      {% endif %}
+    </div>
+
+    <div
+      style="margin-top: 20px; font-size: 12px; color: var(--wet-sand); display: flex; align-items: center; justify-content: center; gap: 6px;">
+      <span style="display: inline-block; width: 8px; height: 8px; background: #1D6F42; border-radius: 50%;"></span>
+      Auto-refreshing every 12 seconds
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/queue_tracker.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    new QueueTracker({{ ticket.pk }}, 12000);
+  });
+</script>
+{% endblock %}

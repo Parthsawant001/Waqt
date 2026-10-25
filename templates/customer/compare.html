@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Weighted Restaurant Comparison — Waqt (वेळ){% endblock %}
+
+{% block content %}
+<div class="waqt-container" style="padding: 40px 24px;">
+  <div class="section-header" style="text-align: left; margin-bottom: 28px;">
+    <span class="section-subtitle">Multi-Criteria Decision Analysis</span>
+    <h1 style="font-size: 38px; margin: 4px 0 8px 0;">Weighted Comparison Algorithm</h1>
+    <p style="color: var(--driftwood); font-size: 16px; margin: 0; max-width: 760px;">
+      Customize how much you value food rating, straight-line distance, price affordability, and waiting time.
+      Waqt transparently calculates and ranks coastal restaurants using deterministic multi-criteria weights.
+    </p>
+  </div>
+
+  <!-- Interactive Sliders Panel -->
+  <form method="get"
+    style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 32px; box-shadow: var(--shadow-subtle); margin-bottom: 40px;">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px;">
+      <h3 style="font-size: 20px; margin: 0;">Adjust Your Factor Priorities</h3>
+      <span id="total-weight-display" class="pilot-tag" style="background: var(--cream); font-weight: 700;">
+        Total Weight: 100%
+      </span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; margin-bottom: 28px;">
+      <!-- Rating Slider -->
+      <div>
+        <div
+          style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+          <span>Food Rating</span>
+          <span id="val-rating" style="color: var(--deep-tide);">{{ w_rating }}%</span>
+        </div>
+        <input type="range" name="w_rating" id="slider-rating" min="0" max="100" value="{{ w_rating }}"
+          class="weight-slider" style="width: 100%;">
+        <div style="font-size: 11px; color: var(--wet-sand); margin-top: 4px;">Rewards 4.5+ star verified Koli seafood
+        </div>
+      </div>
+
+      <!-- Distance Slider -->
+      <div>
+        <div
+          style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+          <span>Proximity (Distance)</span>
+          <span id="val-distance" style="color: var(--deep-tide);">{{ w_distance }}%</span>
+        </div>
+        <input type="range" name="w_distance" id="slider-distance" min="0" max="100" value="{{ w_distance }}"
+          class="weight-slider" style="width: 100%;">
+        <div style="font-size: 11px; color: var(--wet-sand); margin-top: 4px;">Rewards closer straight-line Haversine
+          spots</div>
+      </div>
+
+      <!-- Price Slider -->
+      <div>
+        <div
+          style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+          <span>Budget / Price</span>
+          <span id="val-price" style="color: var(--deep-tide);">{{ w_price }}%</span>
+        </div>
+        <input type="range" name="w_price" id="slider-price" min="0" max="100" value="{{ w_price }}"
+          class="weight-slider" style="width: 100%;">
+        <div style="font-size: 11px; color: var(--wet-sand); margin-top: 4px;">Rewards pocket-friendly coastal thalis
+        </div>
+      </div>
+
+      <!-- Wait Time Slider -->
+      <div>
+        <div
+          style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+          <span>Lowest Wait Time</span>
+          <span id="val-wait" style="color: var(--deep-tide);">{{ w_wait }}%</span>
+        </div>
+        <input type="range" name="w_wait" id="slider-wait" min="0" max="100" value="{{ w_wait }}" class="weight-slider"
+          style="width: 100%;">
+        <div style="font-size: 11px; color: var(--wet-sand); margin-top: 4px;">Penalizes long queue and wait delays
+        </div>
+      </div>
+    </div>
+
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; border-top: var(--border-subtle); padding-top: 20px;">
+      <span style="font-size: 13px; color: var(--driftwood);">
+        * Weights are automatically normalized to 100% in the backend calculation.
+      </span>
+      <button type="submit" class="btn btn-primary">Recalculate & Rank</button>
+    </div>
+  </form>
+
+  <!-- Ranked Comparison Output -->
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    {% for res in ranked_restaurants %}
+    <div
+      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-subtle); display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 24px; align-items: center;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+          <span style="font-size: 18px; font-weight: 700; color: var(--turmeric);">#{{ forloop.counter }}</span>
+          <h3 style="font-size: 20px; margin: 0;">{{ res.restaurant_name }}</h3>
+        </div>
+        <div style="font-size: 13px; color: var(--wet-sand);">
+          {{ res.restaurant_obj.locality }} &bull; {{ res.restaurant_obj.cuisine_type }}
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood);">Overall Waqt Score</div>
+        <div style="font-size: 26px; font-family: var(--font-serif); font-weight: 700; color: var(--deep-tide);">
+          {{ res.waqt_score }} <span style="font-size: 14px; font-weight: 400; color: var(--wet-sand);">/ 100</span>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood);">Wait & Distance</div>
+        <div style="font-size: 14px; font-weight: 600; color: var(--deep-tide); margin-top: 4px;">
+          {{ res.current_wait_minutes }} min &bull; {{ res.distance_km }} km
+        </div>
+      </div>
+
+      <!-- Factor Contributions -->
+      <div style="font-size: 11px; color: var(--driftwood); line-height: 1.5;">
+        <div>Rating: +{{ res.breakdown.rating_contribution }}</div>
+        <div>Distance: +{{ res.breakdown.distance_contribution }}</div>
+        <div>Price: +{{ res.breakdown.price_contribution }}</div>
+        <div>Wait: +{{ res.breakdown.wait_contribution }}</div>
+      </div>
+
+      <div>
+        <a href="{% url 'restaurants:detail' res.restaurant_obj.slug %}" class="btn btn-outline btn-sm">
+          View Restaurant
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/compare.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,593 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Waqt — वेळ | Know the table situation before you reach the shore{% endblock %}
+
+{% block content %}
+<!-- Editorial Hero (Template Design System) -->
+<section class="hero-template-wrap coastal-hero-bg">
+  <div class="hero-template-overlay"></div>
+  <div class="waqt-container hero-template-content">
+    <div style="max-width: 820px; margin-bottom: 24px;">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;">
+        <span class="pilot-tag"
+          style="background: rgba(229, 169, 60, 0.15); border-color: var(--template-gold); color: var(--template-gold); font-weight: 700;">
+          VIRAR &rarr; DAHANU COASTAL CORRIDOR
+        </span>
+        <span class="marathi-accent" style="font-size: 20px; color: var(--template-gold);">समुद्र. चव. वेळ.</span>
+      </div>
+
+      <h1 class="hero-catch-title">
+        FIND YOUR PERFECT <span>CATCH</span>
+      </h1>
+
+      <p class="hero-catch-subhead">
+        Discover authentic Indian coastal dining—from fish thalis and prawns ghee roast to lobster masala. Find your
+        favourite and book a table.
+      </p>
+
+      <div class="hero-template-btns">
+        <a href="{% url 'restaurants:search' %}" class="btn-hero-outline">
+          FIND A TABLE &mdash;
+        </a>
+        <a href="#popular-near-you" class="btn-hero-glass">
+          View Top Picks
+        </a>
+        <a href="{% url 'restaurants:compare' %}" class="btn-hero-glass">
+          <img src="{% static 'icons/compass.svg' %}" width="16" height="16" alt="Compass"
+            style="filter: invert(100%);">
+          Compare Spot
+        </a>
+      </div>
+    </div>
+
+    <!-- Floating White Booking/Search Widget from Template -->
+    <form action="{% url 'restaurants:search' %}" method="get" class="template-search-card">
+      <div class="search-card-col">
+        <span class="search-col-label">LOCATION</span>
+        <select name="locality" class="search-col-select" id="search-location-select">
+          <option value="">Palghar–Virar Coast ▾</option>
+          <option value="Satpati">Satpati Fishing Harbor</option>
+          <option value="Kelva">Kelva Beach & Fort</option>
+          <option value="Arnala">Arnala & Virar West</option>
+          <option value="Vasai">Vasai Creek Coast</option>
+          <option value="Shirgaon">Shirgaon Old Fort</option>
+          <option value="Dahanu">Dahanu Shores</option>
+          <option value="Palghar">Palghar Town</option>
+        </select>
+      </div>
+
+      <div class="search-card-col">
+        <span class="search-col-label">DATE</span>
+        <select name="date" class="search-col-select">
+          <option value="today">Oct 24, 2026 ▾</option>
+          <option value="tomorrow">Oct 25, 2026</option>
+          <option value="weekend">This Weekend</option>
+        </select>
+      </div>
+
+      <div class="search-card-col">
+        <span class="search-col-label">TIME</span>
+        <select name="time" class="search-col-select">
+          <option value="19:00">7:00 PM ▾</option>
+          <option value="19:30">7:30 PM</option>
+          <option value="20:00">8:00 PM</option>
+          <option value="20:30">8:30 PM</option>
+          <option value="21:00">9:00 PM</option>
+        </select>
+      </div>
+
+      <div class="search-card-col">
+        <span class="search-col-label">GUESTS</span>
+        <select name="guests" class="search-col-select">
+          <option value="2">2 people ▾</option>
+          <option value="1">1 person</option>
+          <option value="4">4 people</option>
+          <option value="6">6 people</option>
+          <option value="8">8+ people</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn-find-table" id="hero-find-table-btn">
+        Find a table
+      </button>
+    </form>
+  </div>
+</section>
+
+<!-- Popular Near You (Template Design with Authentic Restaurant Names & Images) -->
+<section id="popular-near-you" class="template-popular-section">
+  <div class="waqt-container">
+    <div class="popular-section-header">
+      <div>
+        <h2 class="popular-headline">Popular Near You</h2>
+        <div style="font-size: 14px; color: rgba(255, 255, 255, 0.6); margin-top: 6px;">
+          Live table capacity and real-time wait estimates across connected coastal restaurants.
+        </div>
+      </div>
+      <a href="{% url 'restaurants:search' %}?status=live" class="popular-view-all">
+        View All &rarr;
+      </a>
+    </div>
+
+    <div class="template-card-grid">
+      {% for item in live_restaurants %}
+      <div class="template-restaurant-card">
+        <div class="template-card-img-wrap">
+          {% if forloop.counter == 1 %}
+          <img src="{% static 'images/template-card-1.jpg' %}" alt="{{ item.obj.name }}" class="template-card-img">
+          {% elif forloop.counter == 2 %}
+          <img src="{% static 'images/template-card-2.jpg' %}" alt="{{ item.obj.name }}" class="template-card-img">
+          {% elif forloop.counter == 3 %}
+          <img src="{% static 'images/template-card-3.jpg' %}" alt="{{ item.obj.name }}" class="template-card-img">
+          {% elif forloop.counter == 4 %}
+          <img src="{% static 'images/template-card-1.jpg' %}" alt="{{ item.obj.name }}" class="template-card-img">
+          {% elif forloop.counter == 5 %}
+          <img src="{% static 'images/template-card-3.jpg' %}" alt="{{ item.obj.name }}" class="template-card-img">
+          {% else %}
+          <img src="{% static 'images/template-card-2.jpg' %}" alt="{{ item.obj.name }}" class="template-card-img">
+          {% endif %}
+        </div>
+        <div class="template-card-body">
+          <div class="template-card-header">
+            <h3 class="template-card-name">{{ item.obj.name }}</h3>
+            <span class="template-card-score">{{ item.rating }}</span>
+          </div>
+
+          <div class="template-card-cuisine">
+            {{ item.obj.cuisine_type }} &bull; {{ item.obj.price_range }}
+          </div>
+
+          <div class="template-card-distance">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--template-gold)" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            <span>{{ item.distance_km }} km away &bull; {{ item.obj.locality }}</span>
+          </div>
+
+          <!-- Live Table Capacity Chip (Feature Preserved) -->
+          <div class="template-card-live-chip">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span
+                style="display: inline-block; width: 8px; height: 8px; background: #1D6F42; border-radius: 50%;"></span>
+              <span><strong>{{ item.available_tables }}/{{ item.total_tables }}</strong> Tables Free</span>
+            </div>
+            <div>Turnover Wait: <strong>{{ item.wait_minutes }}m</strong></div>
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-top: auto;">
+            <a href="{% url 'reservations:book' item.obj.slug %}" class="btn-template-book" style="flex: 1;">
+              Book a table &rarr;
+            </a>
+            <a href="{% url 'restaurants:detail' item.obj.slug %}" class="btn btn-outline btn-sm"
+              style="padding: 12px 14px; border-color: #ddd; color: #333;" title="View Floor Map & Menu">
+              Floor
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Template Footer Banner -->
+    <div class="template-footer-strap">
+      DINEOUT / WAQT &bull; A good meal starts with a great table.
+    </div>
+  </div>
+</section>
+
+<!-- Palghar Harbor Live Telemetry Summary -->
+<section style="background: var(--cream); border-bottom: var(--border-subtle); padding: 28px 0;">
+  <div class="waqt-container">
+    <div
+      style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span class="badge-status badge-available">Live Active</span>
+        <span
+          style="font-family: var(--font-serif); font-size: 18px; font-weight: 700; color: var(--deep-tide);">Palghar
+          Harbor Live</span>
+      </div>
+      <div>
+        <span
+          style="font-size: 11px; text-transform: uppercase; color: var(--wet-sand); font-weight: 600; display: block;">Pilot
+          Harbors</span>
+        <span style="font-size: 20px; font-family: var(--font-serif); font-weight: 700; color: var(--deep-tide);">6
+          Harbors Connected</span>
+      </div>
+      <div>
+        <span
+          style="font-size: 11px; text-transform: uppercase; color: var(--wet-sand); font-weight: 600; display: block;">Monitored
+          Tables</span>
+        <span style="font-size: 20px; font-family: var(--font-serif); font-weight: 700; color: var(--turmeric);">48 Live
+          Tables</span>
+      </div>
+      <div>
+        <span
+          style="font-size: 11px; text-transform: uppercase; color: var(--wet-sand); font-weight: 600; display: block;">Verified
+          Eateries</span>
+        <span style="font-size: 20px; font-family: var(--font-serif); font-weight: 700; color: var(--deep-tide);">{{ total_count }} Corridor Spots</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How Waqt Works -->
+<section id="how-it-works" class="section" style="background: #fff; border-bottom: var(--border-subtle);">
+  <div class="waqt-container">
+    <div class="section-header">
+      <span class="section-subtitle">Fair & Transparent Dining</span>
+      <h2 class="section-title">How Waqt Works</h2>
+      <p style="color: var(--driftwood); max-width: 600px; margin: 0 auto; font-size: 16px;">
+        Three transparent steps to eliminate weekend restaurant waiting lines across the Palghar–Virar coast.
+      </p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px;">
+      <!-- Step 1 -->
+      <div
+        style="border: var(--border-subtle); padding: 32px; border-radius: var(--radius-md); background: var(--shell);">
+        <div
+          style="font-family: var(--font-serif); font-size: 42px; font-weight: 700; color: var(--turmeric); line-height: 1; margin-bottom: 16px;">
+          01</div>
+        <h3 style="font-size: 22px; margin-bottom: 12px;">Find Coastal Tables</h3>
+        <p style="font-size: 14px; color: var(--driftwood); margin-bottom: 0;">
+          Browse authentic Koli and Malvani seafood spots with verified table status (Available, Occupied, Reserved) and
+          straight-line Haversine distance.
+        </p>
+      </div>
+
+      <!-- Step 2 -->
+      <div
+        style="border: var(--border-subtle); padding: 32px; border-radius: var(--radius-md); background: var(--shell);">
+        <div
+          style="font-family: var(--font-serif); font-size: 42px; font-weight: 700; color: var(--turmeric); line-height: 1; margin-bottom: 16px;">
+          02</div>
+        <h3 style="font-size: 22px; margin-bottom: 12px;">Reserve or Join Queue</h3>
+        <p style="font-size: 14px; color: var(--driftwood); margin-bottom: 0;">
+          Reserve in advance via Greedy Table Allocation, or join the live digital queue from your phone with calculated
+          turnover-based wait estimates.
+        </p>
+      </div>
+
+      <!-- Step 3 -->
+      <div
+        style="border: var(--border-subtle); padding: 32px; border-radius: var(--radius-md); background: var(--shell);">
+        <div
+          style="font-family: var(--font-serif); font-size: 42px; font-weight: 700; color: var(--turmeric); line-height: 1; margin-bottom: 16px;">
+          03</div>
+        <h3 style="font-size: 22px; margin-bottom: 12px;">Arrive & Eat</h3>
+        <p style="font-size: 14px; color: var(--driftwood); margin-bottom: 0;">
+          Receive browser notifications the moment your table is ready. Walk straight in without standing in dusty
+          beachside waiting crowds.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- The Coastal Directory (Virar -> Dahanu Corridor) -->
+<section id="coastal-directory" class="section"
+  style="background: var(--shell); border-top: var(--border-subtle); border-bottom: var(--border-subtle);">
+  <div class="waqt-container">
+    <div
+      style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+          <span class="marathi-accent" style="font-size: 18px;">किनाऱ्याची चव</span>
+          <span class="section-subtitle" style="margin-bottom: 0;">Verified Coastal Directory</span>
+        </div>
+        <h2 class="section-title" style="margin-bottom: 0;">Explore the Coastal Corridor</h2>
+      </div>
+      <div style="font-size: 14px; color: var(--driftwood);">
+        {{ directory_count }} verified eateries across Virar, Vasai, Palghar, Kelva, Boisar & Dahanu
+      </div>
+    </div>
+
+    <!-- Region Filter Pills for Directory -->
+    <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 16px; margin-bottom: 28px;"
+      id="directory-region-pills">
+      {% for region in corridor_regions %}
+      <button type="button"
+        class="btn btn-sm {% if forloop.first %}btn-primary{% else %}btn-outline{% endif %} dir-filter-btn"
+        data-region="{{ region }}"
+        style="border-radius: 999px; white-space: nowrap; font-size: 13px; padding: 6px 16px;">
+        {{ region }}
+      </button>
+      {% endfor %}
+    </div>
+
+    <!-- Directory Cards Grid -->
+    <div class="restaurant-grid" id="directory-grid">
+      {% for item in directory_restaurants %}
+      <div class="restaurant-card directory-card-item" data-locality="{{ item.obj.locality }}"
+        style="display: flex; flex-direction: column;">
+        <div class="card-header-img img-{% if forloop.counter|divisibleby:3 %}3{% elif forloop.counter|divisibleby:2 %}2{% else %}1{% endif %}">
+          <div class="card-img-overlay">
+            <span class="locality-badge">{{ item.obj.locality }}</span>
+            <span
+              style="background: rgba(15,44,45,0.85); color: var(--sand); border: 1px solid rgba(231,221,208,0.4); font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 999px;">
+              Verified Directory
+            </span>
+            <span class="score-badge">★ {{ item.rating }}</span>
+          </div>
+        </div>
+        <div class="card-body" style="flex: 1; display: flex; flex-direction: column;">
+          <h3 class="card-title" style="margin-bottom: 4px;">{{ item.obj.name }}</h3>
+          <div class="card-cuisine" style="margin-bottom: 14px;">
+            {{ item.obj.cuisine_type }} &bull; {{ item.obj.price_range }}
+          </div>
+
+          <div class="live-metrics-bar" style="background: var(--cream); border: 1px dashed var(--sand);">
+            <div>
+              <div class="metric-item-label">Live Status</div>
+              <div class="metric-item-value" style="color: var(--driftwood); font-size: 11px;">Not Connected</div>
+            </div>
+            <div>
+              <div class="metric-item-label">Haversine</div>
+              <div class="metric-item-value">{{ item.distance_km }} km</div>
+            </div>
+            <div>
+              <div class="metric-item-label">Contact</div>
+              <div class="metric-item-value" style="font-size: 11px;">{{ item.obj.phone|slice:":12" }}</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-top: auto;">
+            <a href="{% url 'restaurants:detail' item.obj.slug %}" class="btn btn-primary btn-sm" style="flex: 1;">
+              Details
+            </a>
+            <a href="tel:{{ item.obj.phone }}" class="btn btn-outline btn-sm">
+              Call
+            </a>
+            <a href="{% url 'restaurants:claim' item.obj.slug %}" class="btn btn-accent btn-sm"
+              style="font-size: 11px;">
+              Claim
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div style="text-align: center; margin-top: 36px;">
+      <a href="{% url 'restaurants:search' %}" class="btn btn-outline">
+        Search Entire Coastal Directory &rarr;
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Five Core Algorithms Showcase -->
+<section class="section" style="background: var(--deep-tide); color: var(--sand);">
+  <div class="waqt-container">
+    <div class="section-header">
+      <span class="section-subtitle" style="color: var(--turmeric);">Academic & Algorithmic Foundations</span>
+      <h2 class="section-title" style="color: #fff;">Smallest Suitable Table. Fair Queue. Measured Waiting Time.</h2>
+      <p style="color: var(--wet-sand); max-width: 680px; margin: 0 auto; font-size: 16px;">
+        Waqt rejects black-box "AI" hype in favor of five deterministic, mathematically proven algorithms.
+      </p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+      <div
+        style="background: rgba(255,255,255,0.05); border: 1px solid rgba(231,221,208,0.15); padding: 24px; border-radius: var(--radius-sm);">
+        <h4 style="color: var(--turmeric); margin-top: 0; font-size: 17px;">Algorithm 1 &bull; Greedy Table Allocation
+        </h4>
+        <p style="font-size: 13px; color: var(--sand); line-height: 1.6;">
+          Picks the smallest available table that fits the party size. Prevents fragmentation where a party of 2
+          occupies an 8-seater banquet table.
+        </p>
+      </div>
+
+      <div
+        style="background: rgba(255,255,255,0.05); border: 1px solid rgba(231,221,208,0.15); padding: 24px; border-radius: var(--radius-sm);">
+        <h4 style="color: var(--turmeric); margin-top: 0; font-size: 17px;">Algorithm 2 &bull; FIFO with Eligibility
+        </h4>
+        <p style="font-size: 13px; color: var(--sand); line-height: 1.6;">
+          Maintains strict FIFO order while selecting the earliest waiting party compatible with a vacant table
+          capacity, eliminating floor stagnation.
+        </p>
+      </div>
+
+      <div
+        style="background: rgba(255,255,255,0.05); border: 1px solid rgba(231,221,208,0.15); padding: 24px; border-radius: var(--radius-sm);">
+        <h4 style="color: var(--turmeric); margin-top: 0; font-size: 17px;">Algorithm 3 &bull; Turnover Wait Estimation
+          & MAE</h4>
+        <p style="font-size: 13px; color: var(--sand); line-height: 1.6;">
+          Calculates estimated wait from historical dining durations partitioned by party buckets (1-2, 3-4, 5-6, 7+)
+          and tracks Mean Absolute Error (MAE).
+        </p>
+      </div>
+
+      <div
+        style="background: rgba(255,255,255,0.05); border: 1px solid rgba(231,221,208,0.15); padding: 24px; border-radius: var(--radius-sm);">
+        <h4 style="color: var(--turmeric); margin-top: 0; font-size: 17px;">Algorithm 4 &bull; Weighted Comparison</h4>
+        <p style="font-size: 13px; color: var(--sand); line-height: 1.6;">
+          Multi-criteria decision scoring normalized across Rating, Distance, Price, and Wait Time with transparent
+          user-adjustable sliders.
+        </p>
+      </div>
+
+      <div
+        style="background: rgba(255,255,255,0.05); border: 1px solid rgba(231,221,208,0.15); padding: 24px; border-radius: var(--radius-sm);">
+        <h4 style="color: var(--turmeric); margin-top: 0; font-size: 17px;">Algorithm 5 &bull; Haversine Distance</h4>
+        <p style="font-size: 13px; color: var(--sand); line-height: 1.6;">
+          Straight-line great-circle distance along the Palghar–Virar coastal strip using spherical trigonometry (R =
+          6371.0 km), clearly differentiated from road routing.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Leaflet Coastal Restaurant Map -->
+<section id="coastal-map" class="section">
+  <div class="waqt-container">
+    <div class="section-header">
+      <span class="section-subtitle">Geographic Proximity</span>
+      <h2 class="section-title">Palghar–Virar Coastal Corridor Map</h2>
+      <p style="color: var(--driftwood); max-width: 600px; margin: 0 auto 16px auto; font-size: 16px;">
+        Interactive map showing all {{ total_count }} verified eateries from Vasai Creek to Dahanu beach.
+      </p>
+
+      <!-- Map Legend -->
+      <div style="display: flex; justify-content: center; gap: 24px; font-size: 13px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span
+            style="display: inline-block; width: 14px; height: 14px; background: #D9822B; border-radius: 50%;"></span>
+          <strong>Live Pilot Partner (Real-time Capacity)</strong>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span
+            style="display: inline-block; width: 14px; height: 14px; background: #4A6061; border-radius: 50%;"></span>
+          <span style="color: var(--driftwood);">Verified Coastal Directory</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="leaflet-map-container"
+      style="height: 520px; border-radius: var(--radius-md); border: var(--border-subtle); box-shadow: var(--shadow-subtle); background: #e5e3df; overflow: hidden; position: relative;">
+    </div>
+  </div>
+</section>
+
+<!-- Cultural Story Section -->
+<section class="section"
+  style="background: var(--cream); border-top: var(--border-subtle); border-bottom: var(--border-subtle);">
+  <div class="waqt-container" style="max-width: 860px; text-align: center;">
+    <div class="marathi-accent" style="font-size: 28px; margin-bottom: 8px;">किनारा · कोळी · घरची चव</div>
+    <h2 class="section-title" style="margin-bottom: 20px;">Honoring the Palghar & Virar Coastal Heritage</h2>
+    <p style="font-size: 17px; color: var(--driftwood); line-height: 1.8; margin-bottom: 24px;">
+      For generations, the Koli and coastal fishing communities of Satpati, Arnala, Kelva, Vasai, and Dahanu have risen
+      with the tides to bring home the finest catch of the Arabian Sea. Their culinary heritage—fragrant roasted bottle
+      masalas, fresh coconut curries, crisp rice bhakri, and tart purple Solkadhi—is deeply tied to time and the rhythm
+      of the ocean.
+    </p>
+    <p style="font-size: 15px; color: var(--wet-sand); margin-bottom: 0;">
+      Waqt (वेळ) was created to honor that time: ensuring diners spend less time waiting in roadside queues and more
+      time savoring the authentic coastal feast.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script id="landing-map-pins-data" type="application/json">
+{{ map_pins_json|safe }}
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const mapPins = JSON.parse(document.getElementById('landing-map-pins-data').textContent);
+    const defaultLat = parseFloat("{{ default_lat }}");
+    const defaultLon = parseFloat("{{ default_lon }}");
+
+    // Center map around Palghar-Kelva central corridor
+    const map = L.map('leaflet-map-container', {
+      scrollWheelZoom: false
+    }).setView([19.6800, 72.7800], 10);
+
+    // CartoDB Voyager
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      subdomains: 'abcd',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    }).addTo(map);
+
+    // Ensure tiles render completely once container is loaded
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+    window.addEventListener('resize', () => {
+      map.invalidateSize();
+    });
+
+  // Turmeric pin for LIVE partners
+  const livePinIcon = L.divIcon({
+    className: 'custom-live-pin',
+    html: `<div style="background: #D9822B; border: 2px solid #FFFFFF; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); width: 28px; height: 28px; box-shadow: 0 4px 10px rgba(15,44,45,0.4); display: flex; align-items: center; justify-content: center;">
+               <div style="width: 10px; height: 10px; background: #FFFFFF; border-radius: 50%; transform: rotate(45deg);"></div>
+             </div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -28]
+  });
+
+  // Maritime Slate pin for DIRECTORY listings
+  const directoryPinIcon = L.divIcon({
+    className: 'custom-directory-pin',
+    html: `<div style="background: #4A6061; border: 2px solid #FFFFFF; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); width: 24px; height: 24px; box-shadow: 0 3px 8px rgba(15,44,45,0.3); display: flex; align-items: center; justify-content: center;">
+               <div style="width: 8px; height: 8px; background: #FFFFFF; border-radius: 50%; transform: rotate(45deg);"></div>
+             </div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 24],
+    popupAnchor: [0, -24]
+  });
+
+  mapPins.forEach(p => {
+    const isLive = p.is_connected;
+    const icon = isLive ? livePinIcon : directoryPinIcon;
+
+    let statusLine = '';
+    let ctaHtml = '';
+
+    if (isLive) {
+      statusLine = `
+          <div style="margin: 6px 0; font-weight: bold; color: #1D6F42; font-size: 12px;">
+            Live Available Tables: ${p.available_tables} &bull; Wait: ${p.wait_minutes}m
+          </div>`;
+      ctaHtml = `<a href="/restaurants/${p.slug}/" style="color: #D9822B; text-decoration: none; font-weight: 600; font-size: 13px;">View Floor & Menu &rarr;</a>`;
+    } else {
+      statusLine = `
+          <div style="margin: 6px 0; color: #666; font-size: 11px; font-style: italic;">
+            Public Directory Listing &bull; Live capacity unavailable
+          </div>`;
+      ctaHtml = `
+          <div style="display: flex; gap: 8px; align-items: center; margin-top: 6px;">
+            <a href="/restaurants/${p.slug}/" style="color: #0F2C2D; font-weight: 600; font-size: 12px; text-decoration: none;">Details &rarr;</a>
+            <span style="color: #ccc;">|</span>
+            <a href="/restaurants/${p.slug}/claim/" style="color: #D9822B; font-size: 12px; text-decoration: none;">Claim</a>
+          </div>`;
+    }
+
+    const popupHtml = `
+        <div style="font-family: sans-serif; font-size: 13px; line-height: 1.4; padding: 4px; min-width: 190px;">
+          <div style="font-weight: 700; font-size: 15px; color: #0F2C2D;">${p.name}</div>
+          <div style="color: #666; font-size: 12px;">${p.locality} &bull; ★ ${p.rating}</div>
+          ${statusLine}
+          ${ctaHtml}
+        </div>
+      `;
+
+    L.marker([p.lat, p.lon], { icon: icon }).addTo(map).bindPopup(popupHtml);
+  });
+
+  // Client-side region pill filter for directory cards
+  const filterButtons = document.querySelectorAll('.dir-filter-btn');
+  const directoryCards = document.querySelectorAll('.directory-card-item');
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterButtons.forEach(b => {
+        b.classList.remove('btn-primary');
+        b.classList.add('btn-outline');
+      });
+      btn.classList.add('btn-primary');
+      btn.classList.remove('btn-outline');
+
+      const selectedRegion = btn.getAttribute('data-region').toLowerCase();
+
+      directoryCards.forEach(card => {
+        const cardLocality = (card.getAttribute('data-locality') || '').toLowerCase();
+        if (selectedRegion === 'all' || cardLocality.includes(selectedRegion) || selectedRegion.includes(cardLocality)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static waqt_tags %}
+
+{% block title %}Owner Operations Center ?" {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="waqt-container-wide" style="padding: 36px 24px;">
+  <!-- Owner Header -->
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-subtle); padding-bottom: 20px; margin-bottom: 28px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+        <span class="pilot-tag" style="background: var(--turmeric); color: #fff; border: none;">Operations
+          Dashboard</span>
+        <span class="marathi-accent" style="font-size: 18px;">{{ restaurant.locality }}</span>
+      </div>
+      <h1 style="font-size: 32px; margin: 0;">{{ restaurant.name }}</h1>
+    </div>
+
+    <!-- Quick Navigation Bar -->
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <a href="{% url 'owner_dashboard' %}" class="btn btn-primary btn-sm">Live Floor</a>
+      <a href="{% url 'owner_tables' %}" class="btn btn-outline btn-sm">Tables</a>
+      <a href="{% url 'owner_queue' %}" class="btn btn-outline btn-sm">Queue</a>
+      <a href="{% url 'owner_reservations' %}" class="btn btn-outline btn-sm">Reservations</a>
+      <a href="{% url 'owner_menu' %}" class="btn btn-outline btn-sm">Menu</a>
+      <a href="{% url 'owner_kitchen' %}" class="btn btn-accent btn-sm">Kitchen Display</a>
+      <a href="{% url 'owner_analytics' %}" class="btn btn-outline btn-sm">Analytics</a>
+    </div>
+  </div>
+
+  <!-- Live Metrics Ribbon -->
+  <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 32px;"
+    id="dashboard-metrics">
+    <div
+      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 20px; text-align: center;">
+      <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood); font-weight: 600;">Available
+        Tables</div>
+      <div id="metric-available-tables" style="font-size: 32px; font-weight: 700; color: var(--status-available);">--
+      </div>
+    </div>
+    <div
+      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 20px; text-align: center;">
+      <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood); font-weight: 600;">Occupied
+        Tables</div>
+      <div id="metric-occupied-tables" style="font-size: 32px; font-weight: 700; color: var(--status-occupied);">--
+      </div>
+    </div>
+    <div
+      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 20px; text-align: center;">
+      <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood); font-weight: 600;">Active Queue
+      </div>
+      <div id="metric-active-queue" style="font-size: 32px; font-weight: 700; color: var(--turmeric);">--</div>
+    </div>
+    <div
+      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 20px; text-align: center;">
+      <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood); font-weight: 600;">Today's
+        Checked-in</div>
+      <div id="metric-checked-in" style="font-size: 32px; font-weight: 700; color: var(--deep-tide);">--</div>
+    </div>
+    <div
+      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 20px; text-align: center;">
+      <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood); font-weight: 600;">Kitchen
+        Pending</div>
+      <div id="metric-kitchen-pending" style="font-size: 32px; font-weight: 700; color: var(--chilli);">--</div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1.4fr 0.8fr; gap: 32px;">
+    <!-- Live Floor Grid -->
+    <div
+      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 28px; box-shadow: var(--shadow-subtle);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="font-size: 22px; margin: 0;">Live Dining Floor State</h2>
+      </div>
+      <div class="floor-grid" id="floor-grid-container"
+        style="grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));">
+        <!-- JS Injected Tables -->
+      </div>
+    </div>
+
+    <!-- Live Queue & Upcoming Reservations -->
+    <div>
+      <!-- Queue -->
+      <div
+        style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 24px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="font-size: 18px; margin: 0;">Active Queue (FIFO)</h3>
+        </div>
+        <div id="queue-container" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- JS Injected -->
+        </div>
+      </div>
+
+      <!-- Kitchen -->
+      <div
+        style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 24px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="font-size: 18px; margin: 0;">Active Kitchen Orders</h3>
+        </div>
+        <div id="kitchen-container" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- JS Injected -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/owner_operations.js' %}"></script>
+{% endblock %}

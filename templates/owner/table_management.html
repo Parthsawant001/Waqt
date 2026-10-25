@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static waqt_tags %}
+
+{% block title %}Table Floor Management — {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="waqt-container-wide" style="padding: 36px 24px;">
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-subtle); padding-bottom: 16px; margin-bottom: 28px;">
+    <div>
+      <span class="pilot-tag" style="margin-bottom: 6px; display: inline-block;">Floor Operations</span>
+      <h1 style="font-size: 32px; margin: 0;">Table Floor Management</h1>
+    </div>
+    <a href="{% url 'owner_dashboard' %}" class="btn btn-outline btn-sm">&larr; Back to Console</a>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 340px; gap: 32px;">
+    <!-- Left: Floor Table Grid with Status Change Controls -->
+    <div
+      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 28px; box-shadow: var(--shadow-subtle);">
+      <h2 style="font-size: 20px; margin-bottom: 20px;">Current Restaurant Tables ({{ tables.count }})</h2>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+        {% for t in tables %}
+        <div
+          style="border: 2px solid {% if t.status == 'AVAILABLE' %}#1D6F42{% elif t.status == 'OCCUPIED' %}#A73218{% elif t.status == 'RESERVED' %}#C8721C{% else %}#5A3E7D{% endif %}; border-radius: var(--radius-md); padding: 18px; background: #fff;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-family: var(--font-serif); font-size: 22px; font-weight: 700;">Table {{ t.table_number }}</span>
+            <span class="badge-status {{ t.status|status_badge }}" style="font-size: 11px;">{{ t.get_status_display }}</span>
+          </div>
+          <div style="font-size: 13px; color: var(--driftwood); margin-bottom: 14px;">Capacity: {{ t.capacity }} Persons
+          </div>
+
+          <!-- Quick Status Change Form -->
+          <form method="post" style="margin-bottom: 8px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_status">
+            <input type="hidden" name="table_id" value="{{ t.id }}">
+            <select name="status" class="form-select" onchange="this.form.submit()"
+              style="font-size: 12px; padding: 6px;">
+              <option value="AVAILABLE" {% if t.status == 'AVAILABLE' %}selected{% endif %}>Available</option>
+              <option value="OCCUPIED" {% if t.status == 'OCCUPIED' %}selected{% endif %}>Occupied</option>
+              <option value="RESERVED" {% if t.status == 'RESERVED' %}selected{% endif %}>Reserved</option>
+              <option value="CLEANING" {% if t.status == 'CLEANING' %}selected{% endif %}>Cleaning</option>
+            </select>
+          </form>
+
+          <form method="post" onsubmit="return confirm('Remove Table {{ t.table_number }}?');">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="table_id" value="{{ t.id }}">
+            <button type="submit"
+              style="background: none; border: none; color: var(--chilli); font-size: 11px; cursor: pointer; padding: 0;">
+              Remove Table
+            </button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Right: Add Table Form -->
+    <div
+      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 28px; box-shadow: var(--shadow-subtle); height: fit-content;">
+      <h2 style="font-size: 20px; margin-bottom: 16px;">Add New Table</h2>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add">
+        {% for field in form %}
+        <div class="form-group">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Add Table to Floor</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

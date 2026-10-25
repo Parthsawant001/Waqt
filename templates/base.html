@@ -1,0 +1,180 @@
+{% load static waqt_tags %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Waqt — वेळ | Coastal Restaurant Capacity & Queue Platform{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=2">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="icon" href="{% static 'icons/favicon.svg' %}" type="image/svg+xml">
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+  <!-- Scroll Progress Bar -->
+  <div id="scroll-progress"></div>
+
+
+  <!-- Top Coastal Marquee -->
+  <div class="coastal-marquee">
+    <div class="marquee-content">
+      समुद्र &nbsp;·&nbsp; किनारा &nbsp;·&nbsp; कोळी &nbsp;·&nbsp; चव &nbsp;·&nbsp; वेळ &nbsp;·&nbsp; पालघर
+      &nbsp;·&nbsp; विरार &nbsp;·&nbsp; अर्नाळा &nbsp;·&nbsp; सातपाटी &nbsp;·&nbsp; केळवे &nbsp;·&nbsp; मासळी
+      &nbsp;·&nbsp; घरची चव &nbsp;·&nbsp;
+    </div>
+    <div class="marquee-content">
+      समुद्र &nbsp;·&nbsp; किनारा &nbsp;·&nbsp; कोळी &nbsp;·&nbsp; चव &nbsp;·&nbsp; वेळ &nbsp;·&nbsp; पालघर
+      &nbsp;·&nbsp; विरार &nbsp;·&nbsp; अर्नाळा &nbsp;·&nbsp; सातपाटी &nbsp;·&nbsp; केळवे &nbsp;·&nbsp; मासळी
+      &nbsp;·&nbsp; घरची चव &nbsp;·&nbsp;
+    </div>
+    <div class="marquee-content">
+      समुद्र &nbsp;·&nbsp; किनारा &nbsp;·&nbsp; कोळी &nbsp;·&nbsp; चव &nbsp;·&nbsp; वेळ &nbsp;·&nbsp; पालघर
+      &nbsp;·&nbsp; विरार &nbsp;·&nbsp; अर्नाळा &nbsp;·&nbsp; सातपाटी &nbsp;·&nbsp; केळवे &nbsp;·&nbsp; मासळी
+      &nbsp;·&nbsp; घरची चव &nbsp;·&nbsp;
+    </div>
+    <div class="marquee-content">
+      समुद्र &nbsp;·&nbsp; किनारा &nbsp;·&nbsp; कोळी &nbsp;·&nbsp; चव &nbsp;·&nbsp; वेळ &nbsp;·&nbsp; पालघर
+      &nbsp;·&nbsp; विरार &nbsp;·&nbsp; अर्नाळा &nbsp;·&nbsp; सातपाटी &nbsp;·&nbsp; केळवे &nbsp;·&nbsp; मासळी
+      &nbsp;·&nbsp; घरची चव &nbsp;·&nbsp;
+    </div>
+  </div>
+
+  <!-- Main Navigation -->
+  <header class="waqt-navbar">
+    <div class="waqt-container navbar-inner">
+      <div class="brand-wrapper">
+        <a href="{% url 'index' %}" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--template-gold)" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+            <line x1="6" y1="2" x2="6" y2="8"></line>
+            <line x1="3.5" y1="2" x2="3.5" y2="6"></line>
+            <line x1="8.5" y1="2" x2="8.5" y2="6"></line>
+            <path d="M3.5 6a2.5 2.5 0 0 0 5 0"></path>
+            <line x1="6" y1="8.5" x2="6" y2="22"></line>
+            <path d="M17 2v8a3 3 0 0 1-3 3v9"></path>
+            <path d="M17 2a4 4 0 0 1 4 4v5a2 2 0 0 1-2 2"></path>
+          </svg>
+          <div style="display: flex; align-items: baseline; gap: 8px;">
+            <span class="brand-title" style="letter-spacing: 0.08em;">Waqt</span>
+            <span class="brand-devanagari">वेळ</span>
+          </div>
+        </a>
+        <span class="pilot-tag">{{ PILOT_REGION }}</span>
+      </div>
+
+      <nav class="nav-links">
+        <a href="{% url 'restaurants:search' %}" class="nav-link">Discover</a>
+        <a href="{% url 'restaurants:compare' %}" class="nav-link">Top Rated</a>
+        <a href="{% url 'index' %}#coastal-map" class="nav-link">Near Me</a>
+        <a href="{% url 'index' %}#how-it-works" class="nav-link">How It Works</a>
+
+        {% if user.is_authenticated %}
+        {% if is_owner %}
+        <a href="{% url 'owner_dashboard' %}" class="btn btn-accent btn-sm">Floor Console</a>
+        {% else %}
+        <a href="{% url 'customer_dashboard' %}" class="btn btn-outline btn-sm">My Bookings & Queue</a>
+        {% endif %}
+        <a href="{% url 'accounts:logout' %}" class="nav-link" style="color: var(--chilli);">Sign Out</a>
+        {% else %}
+        <a href="{% url 'accounts:login' %}" class="btn-signin-gold">Sign In</a>
+        <a href="{% url 'accounts:customer_register' %}" class="nav-link" style="font-size: 13px;">Diner Sign Up</a>
+        <a href="{% url 'accounts:owner_register' %}" class="btn btn-primary btn-sm"
+          style="font-size: 13px; padding: 7px 14px;">List Restaurant</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <!-- Global Messages -->
+  {% if messages %}
+  <div class="waqt-container messages-container">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+      <img src="{% static 'icons/check.svg' %}" width="16" height="16" alt="Icon" style="filter: invert(20%);">
+      <span>{{ message }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Main Content Block -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="waqt-footer">
+    <div class="waqt-container">
+      <div class="footer-grid">
+        <div>
+          <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px;">
+            <span style="font-family: var(--font-serif); font-size: 26px; font-weight: 700; color: #fff;">Waqt</span>
+            <span class="marathi-accent" style="font-size: 22px;">वेळ</span>
+          </div>
+          <p style="font-size: 14px; color: var(--wet-sand); max-width: 320px; margin-bottom: 16px;">
+            Live table capacity and queue transparency platform built specifically for the Palghar–Virar coastal belt
+            and Koli dining heritage.
+          </p>
+          <span class="pilot-tag"
+            style="background: rgba(231,221,208,0.1); color: var(--sand); border-color: rgba(231,221,208,0.2);">
+            {{ PILOT_REGION }}
+          </span>
+        </div>
+
+        <div>
+          <h4
+            style="color: #fff; font-size: 15px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">
+            Diners</h4>
+          <div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--sand);">
+            <a href="{% url 'restaurants:search' %}">Find a Table</a>
+            <a href="{% url 'restaurants:compare' %}">Compare Restaurants</a>
+            <a href="{% url 'customer_dashboard' %}">Live Queue Tracker</a>
+            <a href="{% url 'accounts:customer_register' %}">Create Account</a>
+          </div>
+        </div>
+
+        <div>
+          <h4
+            style="color: #fff; font-size: 15px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">
+            Restaurant Owners</h4>
+          <div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--sand);">
+            <a href="{% url 'accounts:owner_register' %}">List Your Restaurant</a>
+            <a href="{% url 'owner_dashboard' %}">Floor Management</a>
+            <a href="{% url 'owner_queue' %}">Live Queue Control</a>
+            <a href="{% url 'owner_analytics' %}">Turnover Analytics & MAE</a>
+          </div>
+        </div>
+
+        <div>
+          <h4
+            style="color: #fff; font-size: 15px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">
+            Palghar Coast</h4>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--wet-sand);">
+            <span>Satpati Fishing Port</span>
+            <span>Kelva Beach & Fort</span>
+            <span>Arnala Coastal Wharf</span>
+            <span>Shirgaon Old Fort</span>
+            <span>Vasai Creek & Bhuigaon</span>
+            <span>Dahanu Shores</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 Waqt (वेळ) — Coastal Hospitality Intelligence. Capstone Project.</div>
+        <div>Haversine Geodesic Distance &bull; Greedy Allocation &bull; Turn-based FIFO Queue</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/main.js' %}"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  {% block extra_js %}{% endblock %}
+</body>
+
+</html>

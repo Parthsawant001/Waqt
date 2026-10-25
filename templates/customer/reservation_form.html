@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reserve a Table — {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="waqt-container" style="max-width: 580px; margin: 50px auto;">
+  <div
+    style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 40px; box-shadow: var(--shadow-medium);">
+    <div style="text-align: center; margin-bottom: 28px;">
+      <span class="pilot-tag" style="margin-bottom: 8px; display: inline-block;">Greedy Table Allocation</span>
+      <h2 style="font-size: 30px; margin: 4px 0;">Reserve at {{ restaurant.name }}</h2>
+      <p style="font-size: 14px; color: var(--driftwood);">{{ restaurant.locality }} &bull; {{ restaurant.cuisine_type }}</p>
+    </div>
+
+    {% if no_tables_available %}
+    <div
+      style="background: #FFF8E1; border: 1px solid #FFECB3; padding: 20px; border-radius: var(--radius-sm); margin-bottom: 24px; text-align: center;">
+      <h4 style="color: #F57F17; margin: 0 0 8px 0; font-size: 16px;">All Matching Tables Are Currently Booked</h4>
+      <p style="font-size: 13px; color: var(--driftwood); margin-bottom: 16px;">
+        Our Greedy Allocation algorithm checked all available tables for party size {{ party_size }}, but all are
+        currently reserved or occupied.
+      </p>
+      <a href="{% url 'queue_system:join' restaurant.slug %}?party={{ party_size }}" class="btn btn-accent"
+        style="width: 100%;">
+        Join the Live Queue Instead
+      </a>
+    </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+        <div style="color: var(--chilli); font-size: 12px; margin-top: 4px;">{{ field.errors.0 }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      <div
+        style="background: var(--cream); padding: 14px; border-radius: var(--radius-sm); font-size: 12px; color: var(--driftwood); margin-bottom: 20px;">
+        <strong>How Allocation Works:</strong> Waqt's Greedy Table Allocation engine will assign the smallest available
+        table that comfortably accommodates your party size, avoiding capacity waste.
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%;">Confirm Reservation</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

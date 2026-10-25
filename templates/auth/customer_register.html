@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Diner Registration — Waqt (वेळ){% endblock %}
+
+{% block content %}
+<div class="waqt-container" style="max-width: 500px; margin: 50px auto;">
+  <div style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 40px; box-shadow: var(--shadow-medium);">
+    <div style="text-align: center; margin-bottom: 28px;">
+      <span class="pilot-tag" style="margin-bottom: 8px; display: inline-block;">Diner Account</span>
+      <h2 style="font-size: 28px; margin: 4px 0;">Create Your Account</h2>
+      <p style="font-size: 14px; color: var(--driftwood);">Reserve coastal tables and join live queues seamlessly.</p>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="form-group">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <div style="color: var(--chilli); font-size: 12px; margin-top: 4px;">{{ field.errors.0 }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Create Diner Account</button>
+    </form>
+
+    <div style="margin-top: 24px; text-align: center; font-size: 13px; color: var(--driftwood);">
+      Already have an account? <a href="{% url 'accounts:login' %}" style="color: var(--turmeric); font-weight: 600;">Sign In</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

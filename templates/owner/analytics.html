@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Turnover Analytics & MAE Accuracy — {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="waqt-container-wide" style="padding: 36px 24px;">
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-subtle); padding-bottom: 16px; margin-bottom: 28px;">
+    <div>
+      <span class="pilot-tag" style="background: var(--deep-tide); color: var(--sand); border: none;">
+        Algorithm 3 &bull; Wait Time Analytics & MAE Evaluation
+      </span>
+      <h1 style="font-size: 32px; margin: 4px 0 0 0;">Table Turnover & Wait-Time Accuracy</h1>
+    </div>
+    <a href="{% url 'owner_dashboard' %}" class="btn btn-outline btn-sm">&larr; Back to Console</a>
+  </div>
+
+  <!-- MAE Accuracy Banner -->
+  <div
+    style="background: #fff; border: 2px solid var(--tide-green); border-radius: var(--radius-md); padding: 32px; margin-bottom: 36px; box-shadow: var(--shadow-subtle); display: grid; grid-template-columns: 1.5fr 1fr; gap: 32px; align-items: center;">
+    <div>
+      <span class="pilot-tag"
+        style="background: var(--cream); color: var(--deep-tide); margin-bottom: 8px; display: inline-block;">
+        Mathematical Verification
+      </span>
+      <h2 style="font-size: 26px; margin: 4px 0 8px 0;">Algorithm Wait-Time Accuracy (MAE)</h2>
+      <p style="font-size: 14px; color: var(--driftwood); line-height: 1.6; margin: 0;">
+        Mean Absolute Error measures the exact precision of our wait-time predictions compared to the diner's actual
+        seated time:
+        <br>
+        <code
+          style="background: var(--cream); padding: 2px 6px; border-radius: 4px; font-size: 13px;">MAE = (1 / N) * &Sigma; |Estimated_Wait_i - Actual_Wait_i|</code>
+      </p>
+    </div>
+
+    <div style="background: var(--cream); border-radius: var(--radius-sm); padding: 24px; text-align: center;">
+      <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood); letter-spacing: 0.05em;">Mean
+        Absolute Error</div>
+      <div
+        style="font-size: 48px; font-family: var(--font-serif); font-weight: 700; color: var(--turmeric); line-height: 1; margin: 8px 0;">
+        {{ mae_report.mae }} <span style="font-size: 18px; font-weight: 400; color: var(--driftwood);">min</span>
+      </div>
+      <div style="font-size: 12px; color: var(--wet-sand);">{{ mae_report.status }}</div>
+    </div>
+  </div>
+
+  <!-- Historical Turnover Moving Averages by Party Bucket -->
+  <div
+    style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 32px; margin-bottom: 36px; box-shadow: var(--shadow-subtle);">
+    <h2 style="font-size: 22px; margin-bottom: 8px;">Historical Dining Durations by Party-Size Bucket</h2>
+    <p style="font-size: 14px; color: var(--driftwood); margin-bottom: 24px;">
+      These moving averages are computed directly from completed <code
+        style="background: var(--cream); padding: 2px 4px;">TableTurnover</code> database records to drive real
+      wait-time calculations.
+    </p>
+
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+      {% for b in bucket_stats %}
+      <div
+        style="background: var(--shell); border: var(--border-subtle); border-radius: var(--radius-sm); padding: 20px; text-align: center;">
+        <div style="font-size: 13px; font-weight: 700; color: var(--deep-tide); margin-bottom: 6px;">{{ b.label }}</div>
+        <div style="font-size: 32px; font-family: var(--font-serif); font-weight: 700; color: var(--deep-tide);">
+          {{ b.avg_duration }} <span style="font-size: 14px; font-weight: 400; color: var(--driftwood);">min</span>
+        </div>
+        <div style="font-size: 11px; color: var(--wet-sand); margin-top: 6px;">
+          {% if b.is_fallback %}
+          (Using Palghar Baseline {{ b.baseline }}m)
+          {% else %}
+          Based on {{ b.count }} completed turnovers
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Recent Table Turnover Logs -->
+  <div
+    style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 32px; box-shadow: var(--shadow-subtle);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="font-size: 22px; margin: 0;">Recent Measured Turnover Logs</h2>
+      <span class="pilot-tag" style="background: var(--cream);">Total Records: {{ total_turnovers }}</span>
+    </div>
+
+    {% if recent_turnovers %}
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px; text-align: left;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--sand); color: var(--deep-tide);">
+          <th style="padding: 10px 14px;">Table</th>
+          <th style="padding: 10px 14px;">Party Size</th>
+          <th style="padding: 10px 14px;">Occupied At</th>
+          <th style="padding: 10px 14px;">Freed At</th>
+          <th style="padding: 10px 14px;">Actual Duration</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for to in recent_turnovers %}
+        <tr style="border-bottom: 1px solid var(--sand);">
+          <td style="padding: 12px 14px; font-weight: 600;">Table {{ to.table.table_number }}</td>
+          <td style="padding: 12px 14px;">{{ to.party_size }} Persons</td>
+          <td style="padding: 12px 14px; color: var(--driftwood);">{{ to.occupied_at|date:"d M, H:i" }}</td>
+          <td style="padding: 12px 14px; color: var(--driftwood);">{{ to.freed_at|date:"d M, H:i" }}</td>
+          <td style="padding: 12px 14px; font-weight: 700; color: var(--turmeric);">{{ to.duration_minutes }} min</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--wet-sand); margin: 0;">No turnover history recorded yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

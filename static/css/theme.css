@@ -1,0 +1,82 @@
+/* 
+   Waqt — Luxury Coastal Editorial Theme System
+   Inspired by Palghar-Virar Coast, Koli Fishing Culture & Arabian Sea
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Rozha+One&family=Yatra+One&display=swap');
+
+:root {
+  /* Coastal Palette */
+  --shell: #FBF9F5;
+  --cream: #F5EFEB;
+  --sand: #E7DDD0;
+  --wet-sand: #B8A48F;
+  --driftwood: #3D352F;
+  --deep-tide: #0F2C2D;
+  --tide-green: #1A484A;
+  --turmeric: #D9822B;
+  --kokum: #6B1D38;
+  --chilli: #BD3A23;
+  --coral: #E26D5C;
+  --ink: #1A1715;
+  --scale-silver: #D5DFDE;
+
+  /* Template Theme System (Dineout / Coastal Template) */
+  --template-gold: #E5A93C;
+  --template-gold-hover: #D4962B;
+  --template-gold-light: #FFF8E7;
+  --template-dark: #0D1315;
+  --template-dark-card: #151D20;
+
+  /* Status Colors */
+  --status-available: #1D6F42;
+  --status-available-bg: #E8F5E9;
+  --status-occupied: #A73218;
+  --status-occupied-bg: #FBEBE8;
+  --status-reserved: #C8721C;
+  --status-reserved-bg: #FEF3E8;
+  --status-cleaning: #5A3E7D;
+  --status-cleaning-bg: #F3EDFA;
+
+  /* Typography */
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-marathi: 'Rozha One', 'Yatra One', 'AMS Shikha', serif;
+
+  /* Elevation */
+  --shadow-subtle: 0 4px 20px rgba(15, 44, 45, 0.05);
+  --shadow-medium: 0 8px 30px rgba(15, 44, 45, 0.08);
+  --shadow-deep: 0 16px 40px rgba(15, 44, 45, 0.12);
+
+  /* Borders & Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+  --border-subtle: 1px solid var(--sand);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--shell);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+}
+
+h1, h2, h3, .heading-serif {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  color: var(--deep-tide);
+  margin-top: 0;
+  letter-spacing: -0.01em;
+}
+
+.marathi-accent {
+  font-family: var(--font-marathi);
+  font-weight: 400;
+  color: var(--turmeric);
+  display: inline-block;
+}

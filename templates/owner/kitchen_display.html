@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static waqt_tags %}
+
+{% block title %}Kitchen Display System (KDS) &mdash; {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="waqt-container-wide" style="padding: 24px;">
+    <!-- KDS Header -->
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-subtle); padding-bottom: 16px; margin-bottom: 24px;">
+        <div>
+            <span class="pilot-tag" style="background: var(--chilli); color: #fff; border: none; font-size: 14px;">LIVE
+                KDS</span>
+            <h1 style="font-size: 28px; margin: 4px 0 0 0;">Kitchen Operations</h1>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-primary" onclick="fetchKDS()">Refresh</button>
+            <a href="{% url 'owner_dashboard' %}" class="btn btn-outline">&larr; Dashboard</a>
+        </div>
+    </div>
+
+    <!-- KDS Columns -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; min-height: 70vh;" id="kds-board">
+
+        <!-- Column: NEW -->
+        <div style="background: var(--cream); border-radius: var(--radius-md); padding: 20px;">
+            <h2
+                style="font-size: 18px; text-transform: uppercase; color: var(--driftwood); border-bottom: 2px solid var(--border-subtle); padding-bottom: 12px; margin-top: 0;">
+                1. Pending Acceptance</h2>
+            <div id="col-new" style="display: flex; flex-direction: column; gap: 16px; margin-top: 16px;"></div>
+        </div>
+
+        <!-- Column: PREPARING -->
+        <div style="background: #fdf5eb; border-radius: var(--radius-md); padding: 20px;">
+            <h2
+                style="font-size: 18px; text-transform: uppercase; color: var(--turmeric); border-bottom: 2px solid var(--turmeric); padding-bottom: 12px; margin-top: 0;">
+                2. Firing / Preparing</h2>
+            <div id="col-preparing" style="display: flex; flex-direction: column; gap: 16px; margin-top: 16px;"></div>
+        </div>
+
+        <!-- Column: READY -->
+        <div style="background: #eef7f2; border-radius: var(--radius-md); padding: 20px;">
+            <h2
+                style="font-size: 18px; text-transform: uppercase; color: var(--status-available); border-bottom: 2px solid var(--status-available); padding-bottom: 12px; margin-top: 0;">
+                3. Ready for Service</h2>
+            <div id="col-ready" style="display: flex; flex-direction: column; gap: 16px; margin-top: 16px;"></div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    let kdsInterval;
+
+    function renderOrderCard(order, nextAction, actionLabel, actionColor) {
+        let itemsHtml = order.items.map(i => `
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-subtle); padding-bottom: 4px; margin-bottom: 4px;">
+            <span><strong style="font-size:16px;">${i.quantity}x</strong> ${i.menu_item_name}</span>
+        </div>
+    `).join('');
+
+        return `
+    <div style="background: #fff; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 16px; box-shadow: var(--shadow-subtle);">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+            <strong style="font-size: 18px;">#${order.order_number}</strong>
+            <span class="badge-status" style="background: var(--sand); color: var(--deep-tide); font-size: 14px;">T${order.table_number}</span>
+        </div>
+        <div style="margin-bottom: 16px;">
+            ${itemsHtml}
+        </div>
+        <button class="btn btn-sm" style="width: 100%; background: ${actionColor}; color: #fff; font-weight: bold; border: none; padding: 10px;" onclick="updateOrderStatus(${order.id}, '${nextAction}')">
+            ${actionLabel}
+        </button>
+    </div>
+    `;
+    }
+
+    function fetchKDS() {
+        fetch('/api/owner/dashboard/')
+            .then(res => res.json())
+            .then(data => {
+                const newCol = document.getElementById('col-new');
+                const prepCol = document.getElementById('col-preparing');
+                const readyCol = document.getElementById('col-ready');
+
+                newCol.innerHTML = '';
+                prepCol.innerHTML = '';
+                readyCol.innerHTML = '';
+
+                data.kitchen_orders.forEach(o => {
+                    if (o.status === 'NEW' || o.status === 'ACCEPTED') {
+                        newCol.innerHTML += renderOrderCard(o, 'PREPARING', 'Fire Order', 'var(--turmeric)');
+                    } else if (o.status === 'PREPARING') {
+                        prepCol.innerHTML += renderOrderCard(o, 'READY', 'Mark Ready', 'var(--status-available)');
+                    } else if (o.status === 'READY') {
+                        readyCol.innerHTML += renderOrderCard(o, 'COMPLETED', 'Mark Served', 'var(--driftwood)');
+                    }
+                });
+            });
+    }
+
+    function updateOrderStatus(id, newStatus) {
+        // We can just use PATCH on the detail API
+        fetch(`/api/owner/kitchen/orders/${id}/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ status: newStatus })
+        }).then(() => fetchKDS());
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchKDS();
+        kdsInterval = setInterval(fetchKDS, 10000);
+    });
+</script>
+{% endblock %}

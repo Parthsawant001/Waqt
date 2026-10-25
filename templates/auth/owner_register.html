@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}List Your Coastal Restaurant — Waqt (वेळ){% endblock %}
+
+{% block content %}
+<div class="waqt-container" style="max-width: 640px; margin: 50px auto;">
+  <div style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 40px; box-shadow: var(--shadow-medium);">
+    <div style="text-align: center; margin-bottom: 28px;">
+      <span class="pilot-tag" style="background: var(--cream); color: var(--turmeric); border-color: var(--turmeric); margin-bottom: 8px; display: inline-block;">
+        Palghar & Virar Coastal Restaurateurs
+      </span>
+      <h2 style="font-size: 30px; margin: 4px 0;">List Your Restaurant</h2>
+      <p style="font-size: 14px; color: var(--driftwood);">Manage live floor capacity, digital queues, and turnover analytics.</p>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="form-group">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <div style="color: var(--chilli); font-size: 12px; margin-top: 4px;">{{ field.errors.0 }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 10px;">Register & Launch Floor Console</button>
+    </form>
+
+    <div style="margin-top: 24px; text-align: center; font-size: 13px; color: var(--driftwood);">
+      Already registered? <a href="{% url 'accounts:login' %}" style="color: var(--deep-tide); font-weight: 600;">Sign In to Console</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

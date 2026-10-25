@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static waqt_tags %}
+
+{% block title %}Reservation #{{ reservation.id }} — Waqt (वेळ){% endblock %}
+
+{% block content %}
+<div class="waqt-container" style="max-width: 640px; margin: 50px auto;">
+  <div style="background: #fff; border: 2px solid var(--tide-green); border-radius: var(--radius-lg); padding: 40px; box-shadow: var(--shadow-medium); position: relative;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: var(--border-subtle); padding-bottom: 20px; margin-bottom: 24px;">
+      <div>
+        <span class="pilot-tag" style="background: var(--cream); color: var(--deep-tide); margin-bottom: 6px; display: inline-block;">
+          Confirmed Coastal Reservation
+        </span>
+        <h1 style="font-size: 32px; margin: 0;">Reservation Pass</h1>
+      </div>
+      <span class="badge-status {{ reservation.status|status_badge }}">{{ reservation.get_status_display }}</span>
+    </div>
+
+    <div style="margin-bottom: 24px;">
+      <h2 style="font-size: 24px; color: var(--deep-tide); margin-bottom: 4px;">{{ reservation.restaurant.name }}</h2>
+      <div style="font-size: 14px; color: var(--driftwood);">
+        {{ reservation.restaurant.address }}, {{ reservation.restaurant.locality }}
+      </div>
+      <div style="font-size: 13px; color: var(--wet-sand); margin-top: 2px;">
+        Host Tel: {{ reservation.restaurant.phone }}
+      </div>
+    </div>
+
+    <!-- Booking Pass Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; background: var(--cream); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 28px; text-align: center;">
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood);">Date</div>
+        <div style="font-size: 17px; font-weight: 700; color: var(--deep-tide); margin-top: 2px;">
+          {{ reservation.reservation_date|date:"d M Y" }}
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood);">Time</div>
+        <div style="font-size: 17px; font-weight: 700; color: var(--deep-tide); margin-top: 2px;">
+          {{ reservation.reservation_time|time:"g:i A" }}
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood);">Table Allocated</div>
+        <div style="font-size: 20px; font-family: var(--font-serif); font-weight: 700; color: var(--turmeric); margin-top: 2px;">
+          Table #{{ reservation.table.table_number }}
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size: 14px; color: var(--driftwood); margin-bottom: 28px;">
+      <strong>Party Size:</strong> {{ reservation.party_size }} Persons (Table Capacity: {{ reservation.table.capacity }})<br>
+      {% if reservation.special_requests %}
+        <strong>Special Requests:</strong> {{ reservation.special_requests }}
+      {% endif %}
+    </div>
+
+    <div style="display: flex; gap: 14px;">
+      <a href="https://maps.google.com/?q={{ reservation.restaurant.latitude }},{{ reservation.restaurant.longitude }}" target="_blank" class="btn btn-outline" style="flex: 1;">
+        <img src="{% static 'icons/pin.svg' %}" width="16" height="16" alt="Pin">
+        Directions
+      </a>
+      {% if reservation.status in 'PENDING,CONFIRMED' %}
+        <a href="{% url 'reservations:cancel' reservation.pk %}" class="btn btn-chilli" onclick="return confirm('Cancel this reservation?');">
+          Cancel Booking
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

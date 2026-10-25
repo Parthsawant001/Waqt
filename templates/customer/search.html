@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Coastal Restaurant Directory & Capacity — Waqt (वेळ){% endblock %}
+
+{% block content %}
+<div class="waqt-container" style="padding: 40px 24px;">
+  <div class="section-header" style="text-align: left; margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+      <span class="pilot-tag"
+        style="background: var(--cream); border-color: var(--turmeric); color: var(--turmeric); font-size: 11px;">
+        VIRAR &rarr; DAHANU COASTAL CORRIDOR
+      </span>
+      <span class="marathi-accent" style="font-size: 18px;">किनाऱ्याची चव</span>
+    </div>
+    <h1 style="font-size: 38px; margin: 0 0 8px 0;">Coastal Restaurant Directory & Capacity</h1>
+    <p style="color: var(--driftwood); font-size: 16px; margin: 0;">
+      Showing {{ total_count }} verified coastal dining spots from Virar to Dahanu. Real-time table capacity available
+      for connected pilot partners.
+    </p>
+  </div>
+
+  <!-- Regional Filter Navigation Pills -->
+  <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 16px; margin-bottom: 24px;">
+    {% for loc in localities %}
+    <a href="?locality={% if loc == 'All' %}{% else %}{{ loc }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+      class="btn btn-sm {% if locality == loc or not locality and loc == 'All' %}btn-primary{% else %}btn-outline{% endif %}"
+      style="border-radius: 999px; white-space: nowrap; font-size: 13px; padding: 6px 16px;">
+      {{ loc }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Filter Bar -->
+  <form method="get"
+    style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-subtle); margin-bottom: 40px;">
+    <div
+      style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr auto; gap: 14px; align-items: flex-end; flex-wrap: wrap;">
+      <div>
+        <label class="form-label">Search Name / Cuisine / Dish</label>
+        <input type="text" name="q" value="{{ query }}" placeholder="e.g. Malvan, Pomfret, Agashi..."
+          class="form-input">
+      </div>
+
+      <div>
+        <label class="form-label">Locality</label>
+        <select name="locality" class="form-select">
+          <option value="">All Regions</option>
+          {% for loc in localities %}
+          {% if loc != 'All' %}
+          <option value="{{ loc }}" {% if locality == loc %}selected{% endif %}>{{ loc }}</option>
+          {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="form-label">Waqt Status</label>
+        <select name="status" class="form-select">
+          <option value="">All Listings</option>
+          <option value="live" {% if status_filter == 'live' %}selected{% endif %}>Connected (Live Only)</option>
+          <option value="listed" {% if status_filter == 'listed' %}selected{% endif %}>Directory (Unconnected)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="form-label">Price</label>
+        <select name="price" class="form-select">
+          <option value="">Any Price</option>
+          <option value="₹" {% if price == '₹' %}selected{% endif %}>Budget (₹)</option>
+          <option value="₹₹" {% if price == '₹₹' %}selected{% endif %}>Moderate (₹₹)</option>
+          <option value="₹₹₹" {% if price == '₹₹₹' %}selected{% endif %}>Premium (₹₹₹)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="form-label">Min Rating</label>
+        <select name="min_rating" class="form-select">
+          <option value="">Any Rating</option>
+          <option value="4.5" {% if min_rating == '4.5' %}selected{% endif %}>4.5+ Stars</option>
+          <option value="4.0" {% if min_rating == '4.0' %}selected{% endif %}>4.0+ Stars</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="form-label">Sort By</label>
+        <select name="sort" class="form-select">
+          <option value="recommended" {% if sort_by == 'recommended' %}selected{% endif %}>Recommended</option>
+          <option value="distance" {% if sort_by == 'distance' %}selected{% endif %}>Distance (Haversine)</option>
+          <option value="wait" {% if sort_by == 'wait' %}selected{% endif %}>Lowest Wait Time</option>
+          <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Rating (High to Low)</option>
+          <option value="price" {% if sort_by == 'price' %}selected{% endif %}>Price (Low to High)</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="height: 44px; padding: 0 20px;">
+        Filter
+      </button>
+    </div>
+  </form>
+
+  <!-- Interactive Coastal Discovery Map (OpenStreetMap / Leaflet — Free, No API Key Required) -->
+  <div style="margin-bottom: 36px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+      <div style="font-size: 14px; font-weight: 600; color: var(--deep-tide); display: flex; align-items: center; gap: 8px;">
+        <span>🗺️ Coastal Corridor Discovery Map</span>
+        <span style="font-size: 11px; background: var(--shell); border: 1px solid var(--sand); padding: 2px 8px; border-radius: 999px; color: var(--driftwood);">
+          CartoDB Voyager &bull; No API Key Needed
+        </span>
+      </div>
+      <div style="display: flex; gap: 16px; font-size: 12px;">
+        <span style="display: inline-flex; align-items: center; gap: 6px;">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #D9822B;"></span> Live Pilot Partner
+        </span>
+        <span style="display: inline-flex; align-items: center; gap: 6px;">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #4A6061;"></span> Directory Listing
+        </span>
+      </div>
+    </div>
+    <div id="map"
+      style="height: 380px; width: 100%; border-radius: var(--radius-md); border: var(--border-subtle); box-shadow: var(--shadow-subtle); background: #e5e3df; overflow: hidden; position: relative;">
+    </div>
+  </div>
+
+  <!-- Results Grid -->
+  {% if restaurants %}
+  <div class="restaurant-grid">
+    {% for item in restaurants %}
+    <div class="restaurant-card" style="display: flex; flex-direction: column;">
+        <div class="card-header-img img-{% if forloop.counter|divisibleby:3 %}3{% elif forloop.counter|divisibleby:2 %}2{% else %}1{% endif %}">
+        <div class="card-img-overlay">
+          <span class="locality-badge">{{ item.obj.locality }}</span>
+          {% if item.is_connected %}
+          <span class="badge-status badge-available" style="font-size: 11px; padding: 3px 8px;">Waqt Live</span>
+          {% else %}
+          <span
+            style="background: rgba(15,44,45,0.8); color: var(--sand); border: 1px solid rgba(231,221,208,0.4); font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 999px;">
+            Directory Listing
+          </span>
+          {% endif %}
+          <span class="score-badge">★ {{ item.effective_rating }}</span>
+        </div>
+      </div>
+      <div class="card-body" style="flex: 1; display: flex; flex-direction: column;">
+        <h3 class="card-title" style="margin-bottom: 4px;">{{ item.obj.name }}</h3>
+        <div class="card-cuisine" style="margin-bottom: 16px;">
+          {{ item.obj.cuisine_type }} &bull; {{ item.obj.price_range }}
+        </div>
+
+        {% if item.is_connected %}
+        <div class="live-metrics-bar">
+          <div>
+            <div class="metric-item-label">Available</div>
+            <div class="metric-item-value" style="color: var(--status-available);">{{ item.available_tables }} / {{ item.total_tables }}</div>
+          </div>
+          <div>
+            <div class="metric-item-label">Est. Wait</div>
+            <div class="metric-item-value">{{ item.wait_minutes }} min</div>
+          </div>
+          <div>
+            <div class="metric-item-label">Distance</div>
+            <div class="metric-item-value">{{ item.distance_km }} km</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: auto;">
+          <a href="{% url 'restaurants:detail' item.obj.slug %}" class="btn btn-primary btn-sm" style="flex: 1;">
+            Floor & Menu
+          </a>
+          <a href="{% url 'reservations:book' item.obj.slug %}" class="btn btn-outline btn-sm">
+            Reserve
+          </a>
+          <a href="{% url 'queue_system:join' item.obj.slug %}" class="btn btn-accent btn-sm">
+            Queue
+          </a>
+        </div>
+        {% else %}
+        <div class="live-metrics-bar" style="background: var(--shell); border: 1px dashed var(--sand);">
+          <div>
+            <div class="metric-item-label">Live Status</div>
+            <div class="metric-item-value" style="color: var(--driftwood); font-size: 12px;">Not Connected</div>
+          </div>
+          <div>
+            <div class="metric-item-label">Capacity</div>
+            <div class="metric-item-value" style="color: var(--driftwood); font-size: 12px;">Unavailable</div>
+          </div>
+          <div>
+            <div class="metric-item-label">Distance</div>
+            <div class="metric-item-value">{{ item.distance_km }} km</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: auto;">
+          <a href="{% url 'restaurants:detail' item.obj.slug %}" class="btn btn-primary btn-sm" style="flex: 1;">
+            View Details
+          </a>
+          <a href="tel:{{ item.obj.phone }}" class="btn btn-outline btn-sm">
+            Call
+          </a>
+          <a href="{% url 'restaurants:claim' item.obj.slug %}" class="btn btn-accent btn-sm" style="font-size: 11px;">
+            Claim
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div
+    style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 60px; text-align: center;">
+    <h3 style="font-size: 22px; margin-bottom: 8px;">No coastal eateries found for this filter</h3>
+    <p style="color: var(--driftwood); margin-bottom: 20px;">Try clearing filters or selecting another coastal region.
+    </p>
+    <a href="{% url 'restaurants:search' %}" class="btn btn-primary">Reset Filters</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script id="search-map-pins-data" type="application/json">
+{{ map_pins_json|safe }}
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const mapPins = JSON.parse(document.getElementById('search-map-pins-data').textContent);
+    const userLat = parseFloat("{{ user_lat }}");
+    const userLon = parseFloat("{{ user_lon }}");
+
+    // Initialize map centered at user location or corridor center
+    const map = L.map('map', {
+      scrollWheelZoom: false
+    }).setView([userLat, userLon], 11);
+
+    // CartoDB Voyager tiles (High-reliability coastal tiles, No API key, No 403 blocks)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      subdomains: 'abcd',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    }).addTo(map);
+
+    // Custom pins
+    const livePinIcon = L.divIcon({
+      className: 'custom-live-pin',
+      html: `<div style="background: #D9822B; border: 2px solid #FFFFFF; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); width: 26px; height: 26px; box-shadow: 0 3px 8px rgba(15,44,45,0.3); display: flex; align-items: center; justify-content: center;">
+               <div style="width: 8px; height: 8px; background: #FFFFFF; border-radius: 50%; transform: rotate(45deg);"></div>
+             </div>`,
+      iconSize: [26, 26],
+      iconAnchor: [13, 26],
+      popupAnchor: [0, -26]
+    });
+
+    const dirPinIcon = L.divIcon({
+      className: 'custom-dir-pin',
+      html: `<div style="background: #4A6061; border: 2px solid #FFFFFF; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); width: 22px; height: 22px; box-shadow: 0 2px 6px rgba(15,44,45,0.25); display: flex; align-items: center; justify-content: center;">
+               <div style="width: 6px; height: 6px; background: #FFFFFF; border-radius: 50%; transform: rotate(45deg);"></div>
+             </div>`,
+      iconSize: [22, 22],
+      iconAnchor: [11, 22],
+      popupAnchor: [0, -22]
+    });
+
+    const markers = [];
+    mapPins.forEach(p => {
+      const icon = p.is_connected ? livePinIcon : dirPinIcon;
+      const statusHtml = p.is_connected
+        ? `<div style="margin: 4px 0; color: #1D6F42; font-weight: 600; font-size: 11px;">Live: ${p.available_tables}/${p.total_tables} Tables Free &bull; Wait: ${p.wait_minutes}m</div>`
+        : `<div style="margin: 4px 0; color: #666; font-size: 11px; font-style: italic;">Verified Directory Listing</div>`;
+
+      const popupContent = `
+        <div style="font-family: sans-serif; font-size: 12px; line-height: 1.4; padding: 2px; min-width: 180px;">
+          <div style="font-weight: 700; font-size: 14px; color: #0F2C2D;">${p.name}</div>
+          <div style="color: #666; font-size: 11px;">${p.locality} &bull; ★ ${p.rating} &bull; ${p.price_range}</div>
+          ${statusHtml}
+          <a href="/restaurants/${p.slug}/" style="color: #D9822B; font-weight: 600; text-decoration: none; font-size: 12px; display: inline-block; margin-top: 4px;">View Floor & Menu &rarr;</a>
+        </div>
+      `;
+
+      const marker = L.marker([p.lat, p.lon], { icon: icon }).addTo(map).bindPopup(popupContent);
+      markers.push(marker);
+    });
+
+    // Auto-fit map to show all result pins
+    if (markers.length > 0) {
+      const group = L.featureGroup(markers);
+      map.fitBounds(group.pad(0.12));
+    }
+
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+
+    window.addEventListener('resize', () => {
+      map.invalidateSize();
+    });
+  });
+</script>
+{% endblock %}

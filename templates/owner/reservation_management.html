@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static waqt_tags %}
+
+{% block title %}Manage Reservations — {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="waqt-container-wide" style="padding: 36px 24px;">
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-subtle); padding-bottom: 16px; margin-bottom: 28px;">
+    <div>
+      <span class="pilot-tag" style="margin-bottom: 6px; display: inline-block;">Host Operations</span>
+      <h1 style="font-size: 32px; margin: 0;">Reservation Log & Seating</h1>
+    </div>
+    <a href="{% url 'owner_dashboard' %}" class="btn btn-outline btn-sm">&larr; Back to Console</a>
+  </div>
+
+  <div
+    style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 28px; box-shadow: var(--shadow-subtle);">
+    {% if reservations %}
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      {% for res in reservations %}
+      <div
+        style="border: var(--border-subtle); border-radius: var(--radius-sm); padding: 20px; background: var(--shell); display: grid; grid-template-columns: 1.5fr 1fr 1fr auto; gap: 20px; align-items: center;">
+        <div>
+          <div style="font-size: 18px; font-weight: 700; color: var(--deep-tide);">{{ res.customer.first_name|default:res.customer.username }}</div>
+          <div style="font-size: 13px; color: var(--driftwood);">Tel: {{ res.customer.phone|default:"N/A" }} &bull;
+            Party of {{ res.party_size }}</div>
+          {% if res.special_requests %}
+          <div style="font-size: 12px; color: var(--turmeric); margin-top: 4px;">Note: {{ res.special_requests }}</div>
+          {% endif %}
+        </div>
+
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--wet-sand);">Date & Time</div>
+          <div style="font-size: 14px; font-weight: 600;">{{ res.reservation_date|date:"d M Y" }} &bull; {{ res.reservation_time|time:"g:i A" }}</div>
+        </div>
+
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--wet-sand);">Table & Status</div>
+          <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">Table #{{ res.table.table_number|default:"None" }}</div>
+          <span class="badge-status {{ res.status|status_badge }}" style="font-size: 11px;">{{ res.get_status_display }}</span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 8px;">
+          {% if res.status == 'CONFIRMED' %}
+          <form method="post" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="reservation_id" value="{{ res.id }}">
+            <input type="hidden" name="action" value="seat">
+            <button type="submit" class="btn btn-primary btn-sm">Seat Party</button>
+          </form>
+          <form method="post" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="reservation_id" value="{{ res.id }}">
+            <input type="hidden" name="action" value="no_show">
+            <button type="submit" class="btn btn-outline btn-sm" onclick="return confirm('Mark as No-Show?');">No
+              Show</button>
+          </form>
+          {% elif res.status == 'CHECKED_IN' %}
+          <form method="post" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="reservation_id" value="{{ res.id }}">
+            <input type="hidden" name="action" value="complete">
+            <button type="submit" class="btn btn-accent btn-sm">Complete Dining</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: var(--wet-sand); text-align: center; margin: 40px 0;">No reservations on record.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

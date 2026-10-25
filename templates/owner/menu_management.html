@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Menu Management — {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="waqt-container-wide" style="padding: 36px 24px;">
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-subtle); padding-bottom: 16px; margin-bottom: 28px;">
+    <div>
+      <span class="pilot-tag" style="margin-bottom: 6px; display: inline-block;">Kitchen Operations</span>
+      <h1 style="font-size: 32px; margin: 0;">Coastal Menu Management</h1>
+    </div>
+    <a href="{% url 'owner_dashboard' %}" class="btn btn-outline btn-sm">&larr; Back to Console</a>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 340px; gap: 32px;">
+    <!-- Menu List -->
+    <div
+      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 28px; box-shadow: var(--shadow-subtle);">
+      <h2 style="font-size: 20px; margin-bottom: 20px;">Current Menu Items ({{ menu_items.count }})</h2>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        {% for item in menu_items %}
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-subtle); padding-bottom: 14px;">
+          <div>
+            <div style="font-weight: 600; font-size: 16px; color: var(--deep-tide);">{{ item.name }}</div>
+            <div style="font-size: 12px; color: var(--driftwood);">{{ item.get_category_display }} &bull; ₹{{ item.price }}</div>
+            <div style="font-size: 12px; color: var(--wet-sand);">{{ item.description|truncatewords:15 }}</div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <form method="post" style="display: inline;">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="toggle_availability">
+              <input type="hidden" name="item_id" value="{{ item.id }}">
+              <button type="submit"
+                class="btn btn-sm {% if item.is_available %}btn-primary{% else %}btn-outline{% endif %}">
+                {% if item.is_available %}Available{% else %}Sold Out{% endif %}
+              </button>
+            </form>
+
+            <form method="post" style="display: inline;" onsubmit="return confirm('Delete item?');">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="item_id" value="{{ item.id }}">
+              <button type="submit"
+                style="background: none; border: none; color: var(--chilli); cursor: pointer; font-size: 13px;">
+                Delete
+              </button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Add Dish Form -->
+    <div
+      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 28px; box-shadow: var(--shadow-subtle); height: fit-content;">
+      <h2 style="font-size: 20px; margin-bottom: 16px;">Add Dish to Menu</h2>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add">
+        {% for field in form %}
+        <div class="form-group">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-accent" style="width: 100%;">Add Dish</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

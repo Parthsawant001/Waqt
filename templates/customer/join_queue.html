@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Join Live Queue — {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="waqt-container" style="max-width: 520px; margin: 50px auto;">
+  <div
+    style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 40px; box-shadow: var(--shadow-medium); text-align: center;">
+    <span class="pilot-tag" style="margin-bottom: 8px; display: inline-block;">Turnover-Estimated Queue</span>
+    <h2 style="font-size: 30px; margin: 4px 0 8px 0;">Join Live Queue</h2>
+    <h3 style="font-size: 18px; color: var(--deep-tide); font-weight: 500; margin-bottom: 24px;">{{ restaurant.name }}
+    </h3>
+
+    <div
+      style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; background: var(--cream); padding: 18px; border-radius: var(--radius-sm); margin-bottom: 24px;">
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood);">Waiting Parties</div>
+        <div style="font-size: 26px; font-weight: 700; color: var(--deep-tide);">{{ waiting_parties }}</div>
+      </div>
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood);">Estimated Wait</div>
+        <div style="font-size: 26px; font-weight: 700; color: var(--turmeric);">{{ estimated_wait }} min</div>
+      </div>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label">How many persons in your party?</label>
+        {{ form.party_size }}
+      </div>
+
+      <p style="font-size: 12px; color: var(--wet-sand); text-align: left; margin-bottom: 24px;">
+        Wait time is computed dynamically using historical table turnover averages and FIFO order with table capacity
+        matching.
+      </p>
+
+      <button type="submit" class="btn btn-accent" style="width: 100%;">
+        Get Digital Queue Ticket
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
