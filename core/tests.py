@@ -435,7 +435,7 @@ class IntegrationAndE2ETests(TestCase):
         self.client.login(username='e2e_owner', password='OwnerPassword@123')
         owner_resp = self.client.get(reverse('owner_dashboard'))
         self.assertEqual(owner_resp.status_code, 200)
-        self.assertContains(owner_resp, 'Host Stand Console')
+        self.assertContains(owner_resp, 'Operations Dashboard')
 
         # Owner Analytics
         analytics_resp = self.client.get(reverse('owner_analytics'))
@@ -512,3 +512,35 @@ class IntegrationAndE2ETests(TestCase):
         self.assertEqual(self.listed_restaurant.claim_status, 'VERIFIED')
         self.assertEqual(self.listed_restaurant.owner, claimant)
         self.assertEqual(claimant.role, 'OWNER')
+
+    def test_google_maps_api_key_configuration(self):
+        """Verify Google Maps API key is configured in settings and injected in template context."""
+        from django.conf import settings
+        self.assertTrue(hasattr(settings, 'GOOGLE_MAPS_API_KEY'))
+        self.assertEqual(settings.GOOGLE_MAPS_API_KEY, 'AIzaSyCXqx8pdDX6Sq3zj2uBiI34IIRcOzoLNvM')
+
+        # Test context processor delivers the key
+        response = self.client.get(reverse('index'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'AIzaSyCXqx8pdDX6Sq3zj2uBiI34IIRcOzoLNvM')
+        self.assertIn('GOOGLE_MAPS_API_KEY', response.context)
+        self.assertEqual(response.context['GOOGLE_MAPS_API_KEY'], 'AIzaSyCXqx8pdDX6Sq3zj2uBiI34IIRcOzoLNvM')
+
+    def test_comparison_view_with_selected_and_map_data(self):
+        """Verify enhanced comparison view supports preselected spots, coastal hubs, and rich JSON."""
+        compare_url = reverse('restaurants:compare')
+        response = self.client.get(compare_url, {
+            'selected': self.restaurant.slug,
+            'w_rating': 40,
+            'w_distance': 30,
+            'w_price': 15,
+            'w_wait': 15
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Weighted Comparison Algorithm')
+        self.assertContains(response, 'all-compare-items-data')
+        self.assertContains(response, 'compare-map')
+        self.assertContains(response, 'hub-location-select')
+        self.assertIn('coastal_hubs', response.context)
+        self.assertIn('compare_items_json', response.context)
+        self.assertTrue(len(response.context['coastal_hubs']) >= 6)

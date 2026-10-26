@@ -99,13 +99,13 @@
     </div>
   </form>
 
-  <!-- Interactive Coastal Discovery Map (OpenStreetMap / Leaflet — Free, No API Key Required) -->
+  <!-- Interactive Coastal Discovery Map (Google Maps Enabled) -->
   <div style="margin-bottom: 36px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
       <div style="font-size: 14px; font-weight: 600; color: var(--deep-tide); display: flex; align-items: center; gap: 8px;">
         <span>🗺️ Coastal Corridor Discovery Map</span>
-        <span style="font-size: 11px; background: var(--shell); border: 1px solid var(--sand); padding: 2px 8px; border-radius: 999px; color: var(--driftwood);">
-          CartoDB Voyager &bull; No API Key Needed
+        <span style="font-size: 11px; background: var(--shell); border: 1px solid var(--sand); padding: 2px 8px; border-radius: 999px; color: var(--turmeric); font-weight: 600;">
+          Google Maps Enabled
         </span>
       </div>
       <div style="display: flex; gap: 16px; font-size: 12px;">
@@ -174,6 +174,15 @@
             Queue
           </a>
         </div>
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+          <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--driftwood); cursor: pointer;">
+            <input type="checkbox" class="compare-toggle-cb" data-slug="{{ item.obj.slug }}" data-name="{{ item.obj.name }}" style="accent-color: var(--turmeric); width: 14px; height: 14px;">
+            <span>Add to Compare</span>
+          </label>
+          <a href="{% url 'restaurants:compare' %}?selected={{ item.obj.slug }}" style="font-size: 11px; color: var(--turmeric); text-decoration: none; font-weight: 600;">
+            Compare Spot &rarr;
+          </a>
+        </div>
         {% else %}
         <div class="live-metrics-bar" style="background: var(--shell); border: 1px dashed var(--sand);">
           <div>
@@ -201,6 +210,15 @@
             Claim
           </a>
         </div>
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+          <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--driftwood); cursor: pointer;">
+            <input type="checkbox" class="compare-toggle-cb" data-slug="{{ item.obj.slug }}" data-name="{{ item.obj.name }}" style="accent-color: var(--turmeric); width: 14px; height: 14px;">
+            <span>Add to Compare</span>
+          </label>
+          <a href="{% url 'restaurants:compare' %}?selected={{ item.obj.slug }}" style="font-size: 11px; color: var(--turmeric); text-decoration: none; font-weight: 600;">
+            Compare Spot &rarr;
+          </a>
+        </div>
         {% endif %}
       </div>
     </div>
@@ -215,6 +233,23 @@
     <a href="{% url 'restaurants:search' %}" class="btn btn-primary">Reset Filters</a>
   </div>
   {% endif %}
+
+  <!-- Floating Multi-Restaurant Comparison Drawer -->
+  <div id="compare-floating-drawer"
+    style="display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #0F2C2D; color: #fff; padding: 12px 24px; border-radius: 999px; box-shadow: 0 10px 30px rgba(15,44,45,0.4); z-index: 9999; align-items: center; gap: 18px; border: 1px solid rgba(217,130,43,0.4); backdrop-filter: blur(8px);">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="display: inline-block; width: 8px; height: 8px; background: var(--turmeric); border-radius: 50%;"></span>
+      <span id="compare-floating-count" style="font-weight: 700; font-size: 13px; color: #fff;">0 Selected for Comparison</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button type="button" id="compare-floating-btn" class="btn btn-primary btn-sm" style="border-radius: 999px; font-size: 12px; padding: 6px 18px; font-weight: 700;">
+        Compare Side-by-Side &rarr;
+      </button>
+      <button type="button" id="compare-clear-btn" style="background: none; border: none; color: var(--sand); font-size: 12px; cursor: pointer; text-decoration: underline;">
+        Clear
+      </button>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -228,72 +263,56 @@
     const userLat = parseFloat("{{ user_lat }}");
     const userLon = parseFloat("{{ user_lon }}");
 
-    // Initialize map centered at user location or corridor center
-    const map = L.map('map', {
-      scrollWheelZoom: false
-    }).setView([userLat, userLon], 11);
-
-    // CartoDB Voyager tiles (High-reliability coastal tiles, No API key, No 403 blocks)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      subdomains: 'abcd',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-    }).addTo(map);
-
-    // Custom pins
-    const livePinIcon = L.divIcon({
-      className: 'custom-live-pin',
-      html: `<div style="background: #D9822B; border: 2px solid #FFFFFF; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); width: 26px; height: 26px; box-shadow: 0 3px 8px rgba(15,44,45,0.3); display: flex; align-items: center; justify-content: center;">
-               <div style="width: 8px; height: 8px; background: #FFFFFF; border-radius: 50%; transform: rotate(45deg);"></div>
-             </div>`,
-      iconSize: [26, 26],
-      iconAnchor: [13, 26],
-      popupAnchor: [0, -26]
+    // Initialize Google Maps with fallback
+    const searchMap = WaqtMaps.initMap({
+      containerId: 'map',
+      apiKey: window.WAQT_GOOGLE_MAPS_KEY,
+      center: [userLat, userLon],
+      zoom: 11,
+      pins: mapPins,
+      userCoords: { lat: userLat, lon: userLon }
     });
 
-    const dirPinIcon = L.divIcon({
-      className: 'custom-dir-pin',
-      html: `<div style="background: #4A6061; border: 2px solid #FFFFFF; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); width: 22px; height: 22px; box-shadow: 0 2px 6px rgba(15,44,45,0.25); display: flex; align-items: center; justify-content: center;">
-               <div style="width: 6px; height: 6px; background: #FFFFFF; border-radius: 50%; transform: rotate(45deg);"></div>
-             </div>`,
-      iconSize: [22, 22],
-      iconAnchor: [11, 22],
-      popupAnchor: [0, -22]
-    });
+    // Handle Compare Checkboxes & Floating Drawer
+    const compareBoxes = document.querySelectorAll('.compare-toggle-cb');
+    const drawer = document.getElementById('compare-floating-drawer');
+    const countSpan = document.getElementById('compare-floating-count');
+    const compareBtn = document.getElementById('compare-floating-btn');
+    const clearBtn = document.getElementById('compare-clear-btn');
 
-    const markers = [];
-    mapPins.forEach(p => {
-      const icon = p.is_connected ? livePinIcon : dirPinIcon;
-      const statusHtml = p.is_connected
-        ? `<div style="margin: 4px 0; color: #1D6F42; font-weight: 600; font-size: 11px;">Live: ${p.available_tables}/${p.total_tables} Tables Free &bull; Wait: ${p.wait_minutes}m</div>`
-        : `<div style="margin: 4px 0; color: #666; font-size: 11px; font-style: italic;">Verified Directory Listing</div>`;
+    let selectedSlugs = [];
 
-      const popupContent = `
-        <div style="font-family: sans-serif; font-size: 12px; line-height: 1.4; padding: 2px; min-width: 180px;">
-          <div style="font-weight: 700; font-size: 14px; color: #0F2C2D;">${p.name}</div>
-          <div style="color: #666; font-size: 11px;">${p.locality} &bull; ★ ${p.rating} &bull; ${p.price_range}</div>
-          ${statusHtml}
-          <a href="/restaurants/${p.slug}/" style="color: #D9822B; font-weight: 600; text-decoration: none; font-size: 12px; display: inline-block; margin-top: 4px;">View Floor & Menu &rarr;</a>
-        </div>
-      `;
+    function updateDrawer() {
+      selectedSlugs = Array.from(compareBoxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.getAttribute('data-slug'));
 
-      const marker = L.marker([p.lat, p.lon], { icon: icon }).addTo(map).bindPopup(popupContent);
-      markers.push(marker);
-    });
-
-    // Auto-fit map to show all result pins
-    if (markers.length > 0) {
-      const group = L.featureGroup(markers);
-      map.fitBounds(group.pad(0.12));
+      if (selectedSlugs.length > 0) {
+        drawer.style.display = 'flex';
+        countSpan.textContent = `${selectedSlugs.length} Restaurant${selectedSlugs.length > 1 ? 's' : ''} Selected`;
+      } else {
+        drawer.style.display = 'none';
+      }
     }
 
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 250);
-
-    window.addEventListener('resize', () => {
-      map.invalidateSize();
+    compareBoxes.forEach(cb => {
+      cb.addEventListener('change', updateDrawer);
     });
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        compareBoxes.forEach(cb => { cb.checked = false; });
+        updateDrawer();
+      });
+    }
+
+    if (compareBtn) {
+      compareBtn.addEventListener('click', () => {
+        if (selectedSlugs.length > 0) {
+          window.location.href = `/restaurants/compare/?selected=${encodeURIComponent(selectedSlugs.join(','))}`;
+        }
+      });
+    }
   });
 </script>
 {% endblock %}

@@ -1,138 +1,408 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Weighted Restaurant Comparison — Waqt (वेळ){% endblock %}
+{% block title %}Weighted Restaurant Comparison & Interactive Maps — Waqt (वेळ){% endblock %}
+
+{% block extra_css %}
+<style>
+  .compare-hero-strip {
+    background: linear-gradient(135deg, #0F2C2D 0%, #173d3e 60%, #1f4f51 100%);
+    color: var(--sand);
+    padding: 40px 0 32px 0;
+    border-bottom: 2px solid rgba(217, 130, 43, 0.4);
+    position: relative;
+  }
+  .preset-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(231, 221, 208, 0.25);
+    color: var(--sand);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .preset-btn:hover, .preset-btn.active {
+    background: var(--turmeric);
+    color: #fff;
+    border-color: var(--turmeric);
+    box-shadow: 0 4px 12px rgba(217, 130, 43, 0.35);
+  }
+  .compare-card-col {
+    background: #fff;
+    border: var(--border-subtle);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-subtle);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .compare-card-col:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(15, 44, 45, 0.12);
+  }
+  .compare-card-col.highlighted-winner {
+    border: 2px solid var(--turmeric);
+    box-shadow: 0 10px 30px rgba(217, 130, 43, 0.2);
+  }
+  .winner-crown-tag {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--turmeric);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    z-index: 2;
+  }
+  .metric-progress-track {
+    background: #e2e8f0;
+    height: 6px;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .metric-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .side-by-side-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 36px;
+  }
+  .remove-compare-btn {
+    background: rgba(0,0,0,0.06);
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #64748b;
+    font-weight: bold;
+    font-size: 13px;
+    transition: all 0.15s ease;
+  }
+  .remove-compare-btn:hover {
+    background: var(--chilli);
+    color: #fff;
+  }
+  .factor-bar-row {
+    font-size: 11px;
+    color: var(--driftwood);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .factor-label-wrap {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+  }
+  .ranked-item-row {
+    background: #fff;
+    border: var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    box-shadow: var(--shadow-subtle);
+    display: grid;
+    grid-template-columns: 2fr 1.2fr 1.2fr 1.5fr auto;
+    gap: 20px;
+    align-items: center;
+    transition: all 0.2s ease;
+  }
+  .ranked-item-row:hover {
+    border-color: var(--turmeric);
+    box-shadow: 0 6px 20px rgba(15, 44, 45, 0.08);
+  }
+  @media (max-width: 900px) {
+    .ranked-item-row {
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="waqt-container" style="padding: 40px 24px;">
-  <div class="section-header" style="text-align: left; margin-bottom: 28px;">
-    <span class="section-subtitle">Multi-Criteria Decision Analysis</span>
-    <h1 style="font-size: 38px; margin: 4px 0 8px 0;">Weighted Comparison Algorithm</h1>
-    <p style="color: var(--driftwood); font-size: 16px; margin: 0; max-width: 760px;">
-      Customize how much you value food rating, straight-line distance, price affordability, and waiting time.
-      Waqt transparently calculates and ranks coastal restaurants using deterministic multi-criteria weights.
-    </p>
-  </div>
-
-  <!-- Interactive Sliders Panel -->
-  <form method="get"
-    style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 32px; box-shadow: var(--shadow-subtle); margin-bottom: 40px;">
-    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px;">
-      <h3 style="font-size: 20px; margin: 0;">Adjust Your Factor Priorities</h3>
-      <span id="total-weight-display" class="pilot-tag" style="background: var(--cream); font-weight: 700;">
-        Total Weight: 100%
-      </span>
-    </div>
-
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; margin-bottom: 28px;">
-      <!-- Rating Slider -->
+<!-- Editorial Top Hero -->
+<div class="compare-hero-strip">
+  <div class="waqt-container">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap;">
       <div>
-        <div
-          style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
-          <span>Food Rating</span>
-          <span id="val-rating" style="color: var(--deep-tide);">{{ w_rating }}%</span>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <span class="pilot-tag" style="background: rgba(217, 130, 43, 0.2); border-color: var(--turmeric); color: var(--turmeric); font-weight: 700;">
+            ALGORITHM 4: MCDA RANKING & MAPS
+          </span>
+          <span class="marathi-accent" style="font-size: 20px; color: var(--turmeric);">तुलना आणि पारदर्शकता</span>
         </div>
-        <input type="range" name="w_rating" id="slider-rating" min="0" max="100" value="{{ w_rating }}"
-          class="weight-slider" style="width: 100%;">
-        <div style="font-size: 11px; color: var(--wet-sand); margin-top: 4px;">Rewards 4.5+ star verified Koli seafood
-        </div>
+        <h1 style="font-size: 38px; margin: 0 0 8px 0; color: #fff;">Weighted Comparison Algorithm</h1>
+        <p style="color: var(--sand); font-size: 15px; margin: 0; max-width: 720px; line-height: 1.6;">
+          Real-time dynamic multi-criteria decision matrix along the Palghar–Virar coastal corridor.
+          Customize weights for food rating, proximity distance, price affordability, and waiting time with live client-side scoring and Google Maps visualization.
+        </p>
       </div>
 
-      <!-- Distance Slider -->
-      <div>
-        <div
-          style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
-          <span>Proximity (Distance)</span>
-          <span id="val-distance" style="color: var(--deep-tide);">{{ w_distance }}%</span>
+      <!-- Reference Location Quick Switcher -->
+      <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(231,221,208,0.25); backdrop-filter: blur(8px); padding: 16px 20px; border-radius: var(--radius-md); min-width: 290px;">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--sand); font-weight: 600; margin-bottom: 6px;">
+          📍 Departure / Reference Point
         </div>
-        <input type="range" name="w_distance" id="slider-distance" min="0" max="100" value="{{ w_distance }}"
-          class="weight-slider" style="width: 100%;">
-        <div style="font-size: 11px; color: var(--wet-sand); margin-top: 4px;">Rewards closer straight-line Haversine
-          spots</div>
-      </div>
-
-      <!-- Price Slider -->
-      <div>
-        <div
-          style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
-          <span>Budget / Price</span>
-          <span id="val-price" style="color: var(--deep-tide);">{{ w_price }}%</span>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <select id="hub-location-select" class="form-select" style="background: #fff; color: var(--deep-tide); font-size: 13px; font-weight: 600; padding: 8px 12px; height: 38px;">
+            {% for hub in coastal_hubs %}
+            <option value="{{ hub.lat }},{{ hub.lon }}" {% if forloop.first %}selected{% endif %}>
+              {{ hub.name }}
+            </option>
+            {% endfor %}
+          </select>
+          <button type="button" id="btn-use-gps" class="btn btn-primary btn-sm" title="Detect GPS Location" style="height: 38px; padding: 0 12px; white-space: nowrap; font-size: 12px;">
+            🧭 GPS
+          </button>
         </div>
-        <input type="range" name="w_price" id="slider-price" min="0" max="100" value="{{ w_price }}"
-          class="weight-slider" style="width: 100%;">
-        <div style="font-size: 11px; color: var(--wet-sand); margin-top: 4px;">Rewards pocket-friendly coastal thalis
-        </div>
-      </div>
-
-      <!-- Wait Time Slider -->
-      <div>
-        <div
-          style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
-          <span>Lowest Wait Time</span>
-          <span id="val-wait" style="color: var(--deep-tide);">{{ w_wait }}%</span>
-        </div>
-        <input type="range" name="w_wait" id="slider-wait" min="0" max="100" value="{{ w_wait }}" class="weight-slider"
-          style="width: 100%;">
-        <div style="font-size: 11px; color: var(--wet-sand); margin-top: 4px;">Penalizes long queue and wait delays
+        <div id="active-coords-display" style="font-size: 11px; color: var(--sand); opacity: 0.8; margin-top: 6px;">
+          Reference: {{ user_lat }}, {{ user_lon }}
         </div>
       </div>
     </div>
-
-    <div
-      style="display: flex; justify-content: space-between; align-items: center; border-top: var(--border-subtle); padding-top: 20px;">
-      <span style="font-size: 13px; color: var(--driftwood);">
-        * Weights are automatically normalized to 100% in the backend calculation.
-      </span>
-      <button type="submit" class="btn btn-primary">Recalculate & Rank</button>
-    </div>
-  </form>
-
-  <!-- Ranked Comparison Output -->
-  <div style="display: flex; flex-direction: column; gap: 20px;">
-    {% for res in ranked_restaurants %}
-    <div
-      style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-subtle); display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 24px; align-items: center;">
-      <div>
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
-          <span style="font-size: 18px; font-weight: 700; color: var(--turmeric);">#{{ forloop.counter }}</span>
-          <h3 style="font-size: 20px; margin: 0;">{{ res.restaurant_name }}</h3>
-        </div>
-        <div style="font-size: 13px; color: var(--wet-sand);">
-          {{ res.restaurant_obj.locality }} &bull; {{ res.restaurant_obj.cuisine_type }}
-        </div>
-      </div>
-
-      <div>
-        <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood);">Overall Waqt Score</div>
-        <div style="font-size: 26px; font-family: var(--font-serif); font-weight: 700; color: var(--deep-tide);">
-          {{ res.waqt_score }} <span style="font-size: 14px; font-weight: 400; color: var(--wet-sand);">/ 100</span>
-        </div>
-      </div>
-
-      <div>
-        <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood);">Wait & Distance</div>
-        <div style="font-size: 14px; font-weight: 600; color: var(--deep-tide); margin-top: 4px;">
-          {{ res.current_wait_minutes }} min &bull; {{ res.distance_km }} km
-        </div>
-      </div>
-
-      <!-- Factor Contributions -->
-      <div style="font-size: 11px; color: var(--driftwood); line-height: 1.5;">
-        <div>Rating: +{{ res.breakdown.rating_contribution }}</div>
-        <div>Distance: +{{ res.breakdown.distance_contribution }}</div>
-        <div>Price: +{{ res.breakdown.price_contribution }}</div>
-        <div>Wait: +{{ res.breakdown.wait_contribution }}</div>
-      </div>
-
-      <div>
-        <a href="{% url 'restaurants:detail' res.restaurant_obj.slug %}" class="btn btn-outline btn-sm">
-          View Restaurant
-        </a>
-      </div>
-    </div>
-    {% endfor %}
   </div>
 </div>
+
+<div class="waqt-container" style="padding: 36px 24px;">
+
+  <!-- Interactive Sliders & Presets Panel -->
+  <div style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 28px 32px; box-shadow: var(--shadow-subtle); margin-bottom: 36px;">
+    
+    <!-- Presets Ribbon -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-subtle); padding-bottom: 16px; margin-bottom: 24px; flex-wrap: wrap; gap: 14px;">
+      <div>
+        <h2 style="font-size: 20px; margin: 0 0 4px 0; color: var(--deep-tide);">1. Adjust Factor Priorities</h2>
+        <span style="font-size: 13px; color: var(--driftwood);">Choose a quick dining preset or customize individual sliders below.</span>
+      </div>
+
+      <!-- Instant Presets -->
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button type="button" class="preset-btn active" data-r="25" data-d="25" data-p="25" data-w="25">
+          ⚖️ Balanced (25% Each)
+        </button>
+        <button type="button" class="preset-btn" data-r="15" data-d="25" data-p="10" data-w="50">
+          ⚡ Hungry Now (Wait 50%)
+        </button>
+        <button type="button" class="preset-btn" data-r="55" data-d="15" data-p="10" data-w="20">
+          🐟 Seafood Connoisseur (Rating 55%)
+        </button>
+        <button type="button" class="preset-btn" data-r="20" data-d="20" data-p="50" data-w="10">
+          💰 Budget Friendly (Price 50%)
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 Sliders -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 20px;">
+      <!-- Food Rating -->
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; margin-bottom: 8px;">
+          <span>★ Food Rating</span>
+          <span id="val-rating" style="color: var(--turmeric);">{{ w_rating }}%</span>
+        </div>
+        <input type="range" id="slider-rating" min="0" max="100" value="{{ w_rating }}" class="weight-slider" style="width: 100%; accent-color: var(--turmeric);">
+        <div style="font-size: 11px; color: var(--wet-sand); margin-top: 4px;">Rewards 4.5+ star verified Koli coastal spots</div>
+      </div>
+
+      <!-- Distance -->
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; margin-bottom: 8px;">
+          <span>📏 Proximity (Distance)</span>
+          <span id="val-distance" style="color: var(--deep-tide);">{{ w_distance }}%</span>
+        </div>
+        <input type="range" id="slider-distance" min="0" max="100" value="{{ w_distance }}" class="weight-slider" style="width: 100%; accent-color: var(--deep-tide);">
+        <div style="font-size: 11px; color: var(--wet-sand); margin-top: 4px;">Rewards closer straight-line Haversine spots</div>
+      </div>
+
+      <!-- Price -->
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; margin-bottom: 8px;">
+          <span>💰 Budget / Affordability</span>
+          <span id="val-price" style="color: #166534;">{{ w_price }}%</span>
+        </div>
+        <input type="range" id="slider-price" min="0" max="100" value="{{ w_price }}" class="weight-slider" style="width: 100%; accent-color: #166534;">
+        <div style="font-size: 11px; color: var(--wet-sand); margin-top: 4px;">Rewards pocket-friendly coastal thalis</div>
+      </div>
+
+      <!-- Wait Time -->
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; margin-bottom: 8px;">
+          <span>⏱️ Lowest Wait Time</span>
+          <span id="val-wait" style="color: #b91c1c;">{{ w_wait }}%</span>
+        </div>
+        <input type="range" id="slider-wait" min="0" max="100" value="{{ w_wait }}" class="weight-slider" style="width: 100%; accent-color: #b91c1c;">
+        <div style="font-size: 11px; color: var(--wet-sand); margin-top: 4px;">Penalizes long queue and turnaround delay</div>
+      </div>
+    </div>
+
+    <!-- Slider Footer Info -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #e2e8f0; padding-top: 16px; font-size: 13px; color: var(--driftwood); flex-wrap: wrap; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span id="total-weight-display" class="pilot-tag" style="background: var(--cream); font-weight: 700; color: var(--deep-tide);">
+          Raw Weight Total: 100%
+        </span>
+        <span>• Weights automatically normalized to 100% in real-time</span>
+      </div>
+      <div style="font-size: 12px; color: var(--turmeric); font-weight: 600;">
+        ⚡ Instant zero-latency calculation active
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Comparison Map Section (Google Maps Powered) -->
+  <div style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-subtle); margin-bottom: 36px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <h2 style="font-size: 22px; margin: 0; color: var(--deep-tide);">2. Geographic Comparison Map</h2>
+          <span style="font-size: 11px; background: var(--shell); border: 1px solid var(--sand); padding: 2px 8px; border-radius: 999px; color: var(--turmeric); font-weight: 600;">
+            Google Maps Active
+          </span>
+        </div>
+        <div style="font-size: 13px; color: var(--driftwood); margin-top: 2px;">
+          Visualizing ranked spots from your reference coordinates. Click any pin to spotlight the restaurant.
+        </div>
+      </div>
+
+      <!-- Map Legend -->
+      <div style="display: flex; gap: 16px; font-size: 12px; flex-wrap: wrap;">
+        <span style="display: inline-flex; align-items: center; gap: 6px;">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #D9822B;"></span> Live Pilot Partner
+        </span>
+        <span style="display: inline-flex; align-items: center; gap: 6px;">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #4A6061;"></span> Directory Listing
+        </span>
+        <span style="display: inline-flex; align-items: center; gap: 6px;">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #2563EB;"></span> Your Departure Point
+        </span>
+      </div>
+    </div>
+
+    <div id="compare-map" style="height: 380px; width: 100%; border-radius: var(--radius-sm); border: var(--border-subtle); background: #e5e3df; overflow: hidden; position: relative;"></div>
+  </div>
+
+  <!-- Side-by-Side Head-to-Head Comparison Matrix -->
+  <div style="margin-bottom: 40px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="marathi-accent" style="font-size: 18px;">समोरासमोर तुलना</span>
+          <h2 style="font-size: 22px; margin: 0; color: var(--deep-tide);">3. Side-by-Side Head-to-Head Matrix</h2>
+        </div>
+        <div style="font-size: 13px; color: var(--driftwood);">
+          Direct multi-variable comparison across selected coastal eateries (up to 4 spots).
+        </div>
+      </div>
+
+      <!-- Restaurant Picker to add to comparison -->
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <select id="add-to-compare-select" class="form-select" style="font-size: 13px; min-width: 240px; height: 38px;">
+          <option value="">+ Add Restaurant to Compare...</option>
+        </select>
+        <button type="button" id="btn-compare-all-top" class="btn btn-outline btn-sm" style="font-size: 12px; height: 38px;">
+          Compare Top 3
+        </button>
+      </div>
+    </div>
+
+    <!-- Side-by-Side Container (Dynamically rendered by JS) -->
+    <div id="side-by-side-container" class="side-by-side-grid">
+      <!-- Injected via JavaScript -->
+    </div>
+  </div>
+
+  <!-- Full Ranked Leaderboard -->
+  <div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h2 style="font-size: 22px; margin: 0; color: var(--deep-tide);">4. Full Corridor Ranked Leaderboard</h2>
+        <div style="font-size: 13px; color: var(--driftwood);">
+          Deterministic rank ordered by overall Waqt Score (0-100) calculated with current priority weights.
+        </div>
+      </div>
+      <div style="font-size: 13px; color: var(--deep-tide); font-weight: 600;">
+        Showing <span id="ranked-count-display">{{ total_count }}</span> Verified Spots
+      </div>
+    </div>
+
+    <!-- Leaderboard Feed (Dynamically updated via JS) -->
+    <div id="ranked-leaderboard-list" style="display: flex; flex-direction: column; gap: 16px;">
+      <!-- Server-rendered fallback, dynamically re-rendered by compare.js -->
+      {% for res in ranked_restaurants %}
+      <div class="ranked-item-row" id="row-restaurant-{{ res.restaurant_id }}">
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+            <span style="font-size: 18px; font-weight: 700; color: var(--turmeric);">#{{ forloop.counter }}</span>
+            <h3 style="font-size: 18px; margin: 0; color: var(--deep-tide);">{{ res.restaurant_name }}</h3>
+          </div>
+          <div style="font-size: 12px; color: var(--wet-sand);">
+            {{ res.restaurant_obj.locality }} &bull; {{ res.restaurant_obj.cuisine_type }} &bull; {{ res.price_range }}
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood);">Overall Waqt Score</div>
+          <div style="font-size: 24px; font-family: var(--font-serif); font-weight: 700; color: var(--deep-tide);">
+            {{ res.waqt_score }} <span style="font-size: 13px; font-weight: 400; color: var(--wet-sand);">/ 100</span>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--driftwood);">Distance & Wait</div>
+          <div style="font-size: 13px; font-weight: 600; color: var(--deep-tide); margin-top: 3px;">
+            {{ res.distance_km }} km &bull; {{ res.current_wait_minutes }} min wait
+          </div>
+        </div>
+
+        <!-- Breakdown Bars -->
+        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--driftwood);">
+          <div>Rating Contribution: <strong>+{{ res.breakdown.rating_contribution }}</strong></div>
+          <div>Distance Contribution: <strong>+{{ res.breakdown.distance_contribution }}</strong></div>
+          <div>Price Contribution: <strong>+{{ res.breakdown.price_contribution }}</strong></div>
+          <div>Wait Contribution: <strong>+{{ res.breakdown.wait_contribution }}</strong></div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <a href="{% url 'restaurants:detail' res.restaurant_obj.slug %}" class="btn btn-outline btn-sm">
+            View Details
+          </a>
+          <button type="button" class="btn btn-sm btn-primary btn-toggle-side-by-side" data-id="{{ res.restaurant_id }}" style="font-size: 11px;">
+            Compare Side-by-Side
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<!-- JSON Data Payload -->
+<script id="all-compare-items-data" type="application/json">
+{{ compare_items_json|safe }}
+</script>
 {% endblock %}
 
 {% block extra_js %}

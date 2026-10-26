@@ -209,11 +209,23 @@ def restaurant_search_view(request):
     return render(request, 'customer/search.html', context)
 
 
+COASTAL_HUBS = [
+    {'name': 'Virar (Arnala / West)', 'lat': 19.4632, 'lon': 72.7845},
+    {'name': 'Palghar Railway Station', 'lat': 19.6967, 'lon': 72.7699},
+    {'name': 'Satpati Fishing Harbor', 'lat': 19.7345, 'lon': 72.7050},
+    {'name': 'Kelva Beach & Fort', 'lat': 19.6210, 'lon': 72.7310},
+    {'name': 'Vasai Creek & West', 'lat': 19.3620, 'lon': 72.8020},
+    {'name': 'Boisar / Tarapur MIDC', 'lat': 19.8020, 'lon': 72.7540},
+    {'name': 'Dahanu Coastal Shores', 'lat': 19.9720, 'lon': 72.7320},
+]
+
+
 def restaurant_compare_view(request):
     """
     Weighted Restaurant Comparison Tool:
     Allows diners to configure sliders for Rating, Distance, Price, and Waiting Time.
-    Displays dynamic transparent Waqt score breakdown.
+    Displays dynamic transparent Waqt score breakdown, side-by-side comparison,
+    and interactive Google Maps visualization.
     """
     try:
         user_lat = float(request.GET.get('lat', get_default_coastal_coords()[0]))
@@ -226,6 +238,10 @@ def restaurant_compare_view(request):
     w_price = float(request.GET.get('w_price', 20))
     w_wait = float(request.GET.get('w_wait', 25))
 
+    raw_selected = request.GET.get('selected', '') or request.GET.get('compare', '')
+    selected_slugs = [s.strip() for s in raw_selected.split(',') if s.strip()]
+    selected_ids = [int(i) for i in request.GET.get('ids', '').split(',') if i.strip().isdigit()]
+
     restaurants = Restaurant.objects.filter(is_active=True)
     ranked = rank_restaurants_weighted(
         restaurants,
@@ -237,6 +253,41 @@ def restaurant_compare_view(request):
         w_wait=w_wait
     )
 
+    tier_map = {'₹': 1, '₹₹': 2, '₹₹₹': 3, '₹₹₹₹': 4}
+    compare_items = []
+    for r in restaurants:
+        is_conn = r.is_connected_to_waqt()
+        wait = estimate_queue_wait_minutes(r, party_size=2) if is_conn else 15
+        rating = float(r.external_rating or r.average_rating or 4.0)
+        is_sel = (r.slug in selected_slugs or r.id in selected_ids)
+        compare_items.append({
+            'id': r.id,
+            'name': r.name,
+            'slug': r.slug,
+            'locality': r.locality,
+            'address': r.address,
+            'phone': r.phone,
+            'cuisine': r.cuisine_type,
+            'price_range': r.price_range,
+            'price_tier': tier_map.get(r.price_range, 2),
+            'rating': rating,
+            'lat': float(r.latitude),
+            'lon': float(r.longitude),
+            'is_connected': is_conn,
+            'available_tables': r.available_tables() if is_conn else 0,
+            'total_tables': r.total_tables() if is_conn else 0,
+            'waiting_queue': r.waiting_queue_count() if is_conn else 0,
+            'wait_minutes': wait,
+            'selected': is_sel,
+        })
+
+    # If no initial selection given, default preselect top 2 for instant comparison
+    if not any(item['selected'] for item in compare_items) and len(ranked) >= 2:
+        top_ids = [ranked[0]['restaurant_id'], ranked[1]['restaurant_id']]
+        for item in compare_items:
+            if item['id'] in top_ids:
+                item['selected'] = True
+
     context = {
         'ranked_restaurants': ranked,
         'user_lat': user_lat,
@@ -245,6 +296,10 @@ def restaurant_compare_view(request):
         'w_distance': int(w_distance),
         'w_price': int(w_price),
         'w_wait': int(w_wait),
+        'coastal_hubs': COASTAL_HUBS,
+        'compare_items_json': json.dumps(compare_items),
+        'selected_slugs': selected_slugs,
+        'total_count': restaurants.count(),
     }
     return render(request, 'customer/compare.html', context)
 

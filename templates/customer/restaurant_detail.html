@@ -214,7 +214,7 @@
     {% endif %}
   </div>
 
-  <!-- Restaurant Coastal Location Map (OpenStreetMap / Leaflet — Free, No API Key Required) -->
+  <!-- Restaurant Coastal Location Map (Google Maps Enabled) -->
   <div style="background: #fff; border: var(--border-subtle); border-radius: var(--radius-md); padding: 28px; box-shadow: var(--shadow-subtle); margin-bottom: 40px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
       <div>
@@ -223,11 +223,13 @@
           {{ restaurant.address }} &bull; {{ restaurant.locality }}, {{ restaurant.district }}
         </div>
       </div>
-      <a href="https://www.openstreetmap.org/?mlat={{ restaurant.latitude }}&mlon={{ restaurant.longitude }}#map=16/{{ restaurant.latitude }}/{{ restaurant.longitude }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">
-        View on OpenStreetMap &rarr;
-      </a>
+      <div style="display: flex; gap: 10px;">
+        <a href="https://www.google.com/maps/dir/?api=1&destination={{ restaurant.latitude }},{{ restaurant.longitude }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="display: flex; align-items: center; gap: 6px;">
+          🧭 Google Maps Directions &rarr;
+        </a>
+      </div>
     </div>
-    <div id="detail-map" style="height: 320px; width: 100%; border-radius: var(--radius-sm); border: var(--border-subtle); background: #e5e3df; overflow: hidden; position: relative;"></div>
+    <div id="detail-map" style="height: 340px; width: 100%; border-radius: var(--radius-sm); border: var(--border-subtle); background: #e5e3df; overflow: hidden; position: relative;"></div>
   </div>
 
   <!-- Reviews Section -->
@@ -295,41 +297,32 @@
   document.addEventListener('DOMContentLoaded', () => {
     const lat = parseFloat("{{ restaurant.latitude }}");
     const lon = parseFloat("{{ restaurant.longitude }}");
-    const name = "{{ restaurant.name|escapejs }}";
-    const locality = "{{ restaurant.locality|escapejs }}";
+    const isConn = {% if is_connected %}true{% else %}false{% endif %};
 
-    const map = L.map('detail-map', {
-      scrollWheelZoom: false
-    }).setView([lat, lon], 14);
+    const restaurantPin = {
+      name: "{{ restaurant.name|escapejs }}",
+      slug: "{{ restaurant.slug|escapejs }}",
+      locality: "{{ restaurant.locality|escapejs }}",
+      cuisine: "{{ restaurant.cuisine_type|escapejs }}",
+      price_range: "{{ restaurant.price_range|escapejs }}",
+      rating: parseFloat("{{ restaurant.external_rating|default:restaurant.average_rating|default:4.2 }}"),
+      lat: lat,
+      lon: lon,
+      is_connected: isConn,
+      available_tables: {{ restaurant.available_tables|default:0 }},
+      total_tables: {{ restaurant.total_tables|default:0 }},
+      wait_minutes: {{ current_wait|default:0 }},
+      phone: "{{ restaurant.phone|escapejs }}",
+      address: "{{ restaurant.address|escapejs }}"
+    };
 
-    // CartoDB Voyager tiles (High-reliability coastal tiles, No API key, No 403 blocks)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      subdomains: 'abcd',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-    }).addTo(map);
-
-    const pinIcon = L.divIcon({
-      className: 'custom-detail-pin',
-      html: `<div style="background: #D9822B; border: 2px solid #FFFFFF; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); width: 28px; height: 28px; box-shadow: 0 3px 8px rgba(15,44,45,0.4); display: flex; align-items: center; justify-content: center;">
-               <div style="width: 10px; height: 10px; background: #FFFFFF; border-radius: 50%; transform: rotate(45deg);"></div>
-             </div>`,
-      iconSize: [28, 28],
-      iconAnchor: [14, 28],
-      popupAnchor: [0, -28]
-    });
-
-    L.marker([lat, lon], { icon: pinIcon })
-      .addTo(map)
-      .bindPopup(`<strong style="font-size: 13px;">${name}</strong><br><span style="font-size: 11px; color: #666;">${locality}</span>`)
-      .openPopup();
-
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 250);
-
-    window.addEventListener('resize', () => {
-      map.invalidateSize();
+    WaqtMaps.initMap({
+      containerId: 'detail-map',
+      apiKey: window.WAQT_GOOGLE_MAPS_KEY,
+      center: [lat, lon],
+      zoom: 15,
+      pins: [restaurantPin],
+      userCoords: { lat: lat, lon: lon }
     });
   });
 </script>

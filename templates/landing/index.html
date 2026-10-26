@@ -483,111 +483,59 @@
     const defaultLat = parseFloat("{{ default_lat }}");
     const defaultLon = parseFloat("{{ default_lon }}");
 
-    // Center map around Palghar-Kelva central corridor
-    const map = L.map('leaflet-map-container', {
-      scrollWheelZoom: false
-    }).setView([19.6800, 72.7800], 10);
+    const regionCoords = {
+      'virar': { lat: 19.4632, lon: 72.7845, zoom: 12 },
+      'vasai': { lat: 19.3620, lon: 72.8020, zoom: 12 },
+      'nalasopara': { lat: 19.4180, lon: 72.8250, zoom: 12 },
+      'palghar': { lat: 19.6967, lon: 72.7699, zoom: 12 },
+      'kelva': { lat: 19.6210, lon: 72.7310, zoom: 13 },
+      'boisar': { lat: 19.8020, lon: 72.7540, zoom: 12 },
+      'tarapur': { lat: 19.8500, lon: 72.7000, zoom: 12 },
+      'dahanu': { lat: 19.9720, lon: 72.7320, zoom: 12 },
+      'all': { lat: 19.6800, lon: 72.7800, zoom: 10 }
+    };
 
-    // CartoDB Voyager
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      subdomains: 'abcd',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-    }).addTo(map);
-
-    // Ensure tiles render completely once container is loaded
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 250);
-    window.addEventListener('resize', () => {
-      map.invalidateSize();
+    // Initialize map using Google Maps JS API with resilient fallback
+    const landingMapInstance = WaqtMaps.initMap({
+      containerId: 'leaflet-map-container',
+      apiKey: window.WAQT_GOOGLE_MAPS_KEY,
+      center: [19.6800, 72.7800],
+      zoom: 10,
+      pins: mapPins,
+      userCoords: { lat: defaultLat, lon: defaultLon }
     });
 
-  // Turmeric pin for LIVE partners
-  const livePinIcon = L.divIcon({
-    className: 'custom-live-pin',
-    html: `<div style="background: #D9822B; border: 2px solid #FFFFFF; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); width: 28px; height: 28px; box-shadow: 0 4px 10px rgba(15,44,45,0.4); display: flex; align-items: center; justify-content: center;">
-               <div style="width: 10px; height: 10px; background: #FFFFFF; border-radius: 50%; transform: rotate(45deg);"></div>
-             </div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-    popupAnchor: [0, -28]
-  });
+    // Client-side region pill filter for directory cards & map sync
+    const filterButtons = document.querySelectorAll('.dir-filter-btn');
+    const directoryCards = document.querySelectorAll('.directory-card-item');
 
-  // Maritime Slate pin for DIRECTORY listings
-  const directoryPinIcon = L.divIcon({
-    className: 'custom-directory-pin',
-    html: `<div style="background: #4A6061; border: 2px solid #FFFFFF; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); width: 24px; height: 24px; box-shadow: 0 3px 8px rgba(15,44,45,0.3); display: flex; align-items: center; justify-content: center;">
-               <div style="width: 8px; height: 8px; background: #FFFFFF; border-radius: 50%; transform: rotate(45deg);"></div>
-             </div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 24],
-    popupAnchor: [0, -24]
-  });
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => {
+          b.classList.remove('btn-primary');
+          b.classList.add('btn-outline');
+        });
+        btn.classList.add('btn-primary');
+        btn.classList.remove('btn-outline');
 
-  mapPins.forEach(p => {
-    const isLive = p.is_connected;
-    const icon = isLive ? livePinIcon : directoryPinIcon;
+        const selectedRegion = btn.getAttribute('data-region').toLowerCase();
 
-    let statusLine = '';
-    let ctaHtml = '';
+        directoryCards.forEach(card => {
+          const cardLocality = (card.getAttribute('data-locality') || '').toLowerCase();
+          if (selectedRegion === 'all' || cardLocality.includes(selectedRegion) || selectedRegion.includes(cardLocality)) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
 
-    if (isLive) {
-      statusLine = `
-          <div style="margin: 6px 0; font-weight: bold; color: #1D6F42; font-size: 12px;">
-            Live Available Tables: ${p.available_tables} &bull; Wait: ${p.wait_minutes}m
-          </div>`;
-      ctaHtml = `<a href="/restaurants/${p.slug}/" style="color: #D9822B; text-decoration: none; font-weight: 600; font-size: 13px;">View Floor & Menu &rarr;</a>`;
-    } else {
-      statusLine = `
-          <div style="margin: 6px 0; color: #666; font-size: 11px; font-style: italic;">
-            Public Directory Listing &bull; Live capacity unavailable
-          </div>`;
-      ctaHtml = `
-          <div style="display: flex; gap: 8px; align-items: center; margin-top: 6px;">
-            <a href="/restaurants/${p.slug}/" style="color: #0F2C2D; font-weight: 600; font-size: 12px; text-decoration: none;">Details &rarr;</a>
-            <span style="color: #ccc;">|</span>
-            <a href="/restaurants/${p.slug}/claim/" style="color: #D9822B; font-size: 12px; text-decoration: none;">Claim</a>
-          </div>`;
-    }
-
-    const popupHtml = `
-        <div style="font-family: sans-serif; font-size: 13px; line-height: 1.4; padding: 4px; min-width: 190px;">
-          <div style="font-weight: 700; font-size: 15px; color: #0F2C2D;">${p.name}</div>
-          <div style="color: #666; font-size: 12px;">${p.locality} &bull; ★ ${p.rating}</div>
-          ${statusLine}
-          ${ctaHtml}
-        </div>
-      `;
-
-    L.marker([p.lat, p.lon], { icon: icon }).addTo(map).bindPopup(popupHtml);
-  });
-
-  // Client-side region pill filter for directory cards
-  const filterButtons = document.querySelectorAll('.dir-filter-btn');
-  const directoryCards = document.querySelectorAll('.directory-card-item');
-
-  filterButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterButtons.forEach(b => {
-        b.classList.remove('btn-primary');
-        b.classList.add('btn-outline');
-      });
-      btn.classList.add('btn-primary');
-      btn.classList.remove('btn-outline');
-
-      const selectedRegion = btn.getAttribute('data-region').toLowerCase();
-
-      directoryCards.forEach(card => {
-        const cardLocality = (card.getAttribute('data-locality') || '').toLowerCase();
-        if (selectedRegion === 'all' || cardLocality.includes(selectedRegion) || selectedRegion.includes(cardLocality)) {
-          card.style.display = 'flex';
-        } else {
-          card.style.display = 'none';
+        // Pan map to selected region
+        if (landingMapInstance && regionCoords[selectedRegion]) {
+          const target = regionCoords[selectedRegion];
+          landingMapInstance.panTo(target.lat, target.lon, target.zoom);
         }
       });
     });
-  });
   });
 </script>
 {% endblock %}

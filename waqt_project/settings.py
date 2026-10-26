@@ -174,3 +174,6 @@ REST_FRAMEWORK = {
 
 # Geocoding User Agent
 NOMINATIM_USER_AGENT = os.environ.get('NOMINATIM_USER_AGENT', 'WaqtCoastalPlatform/1.0')
+
+# Google Maps API Key
+GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', 'AIzaSyCXqx8pdDX6Sq3zj2uBiI34IIRcOzoLNvM')

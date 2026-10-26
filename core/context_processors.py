@@ -9,4 +9,5 @@ def waqt_context(request):
         'user': request.user,
         'is_customer': request.user.is_authenticated and getattr(request.user, 'role', '') == 'CUSTOMER',
         'is_owner': request.user.is_authenticated and getattr(request.user, 'role', '') == 'OWNER',
+        'GOOGLE_MAPS_API_KEY': getattr(settings, 'GOOGLE_MAPS_API_KEY', ''),
     }
